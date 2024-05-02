@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visualizar Funcionalidades</title>
+    <style>
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .orange-button {
+            background-color: orange;
+            border-color: orange;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+
+        li {
+            display: inline-block;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Selecione o tipo de visualização:</h1>
+    <ul>
+        <li><a class="button" href="{% url 'graficos_comportamento' %}">Gráficos de Comportamento</a></li>
+        <li><a class="button" href="{% url 'mapeamento_features' %}">Mapeamento das features</a></li>
+        <li><a class="button" href="{% url 'clusters' %}">Clusters</a></li>
+        <li><a class="button" href="{% url 'selecao_caracteristicas' %}">Seleção de Características</a></li>
+        <li><a class="button" href="{% url 'importancias_ml' %}">Importâncias para Machine Learning</a></li>
+        <li><a class="button" href="{% url 'score_average_mobat' %}">Score Average Mobat dos IPs com maior variação</a></li>
+        <li><a class="button" href="{% url 'reputacao_pais' %}">Reputação por País</a></li>
+        <li><a class="button" href="{% url 'upload_tabela_ips' %}">Upload da Tabela dos IPs do período</a></li>
+        <li><a class="button" href="{% url 'heatmap_ips' %}">HeatMap de Ocorrência dos IPs nos países</a></li>
+        <li><a class="button" href="{% url 'tabela_acuracia' %}">Tabela de Acurácia e Tempo de Treinamento dos Modelos</a></li>
+        <li><a class="button" href="{% url 'grafico_dispersao' %}">Gráfico de Dispersão</a></li>
+        <li><a class="button orange-button" href="{% url 'index' %}">Voltar para o início</a></li>
+    </ul>
+</body>
+</html>

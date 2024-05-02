@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Página Principal</title>
+    <style>
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Estilos para quando o mouse passa por cima do botão */
+        .button:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        h1 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Selecione a tabela que deseja visualizar:</h1>
+    <ul>
+        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=1">Abril-Maio(2023)</a></li>
+        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=2">Setembro-Novembro(2023)</a></li>
+        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=3">Janeiro-Março(2024)</a></li>
+        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=4">Total-Coletado</a></li>
+    </ul>
+</body>
+</html>

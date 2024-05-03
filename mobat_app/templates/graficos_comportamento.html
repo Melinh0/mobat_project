@@ -5,5 +5,25 @@
 </head>
 <body>
     <h1>Gráficos de Comportamento</h1>
+        <label for="ip_address">Selecione o endereço IP:</label>
+        <select id="ip_address" name="ip_address">
+            {% for ip in ip_list %}
+            <option value="{{ ip }}">{{ ip }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="chart_type">Selecione o tipo de gráfico:</label>
+        <select id="chart_type" name="chart_type">
+            <option value="location">Localização</option>
+            <option value="reports">Relatórios</option>
+            <option value="score_average">Média de Pontuação</option>
+            <option value="last_report">Último Relatório</option>
+            <option value="time_period">Período de Tempo</option>
+            <option value="ibm_scores">Pontuações IBM</option>
+            <option value="virustotal_stats">Estatísticas do VirusTotal</option>
+        </select>
+        <br>
+        <input type="submit" value="Gerar Gráfico">
+    </form>
 </body>
 </html>

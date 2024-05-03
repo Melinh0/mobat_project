@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upload da Tabela dos IPs do Período</title>
+    <title>Download da Tabela dos IPs do Período</title>
 </head>
 <body>
-    <h1>Upload da Tabela dos IPs do Período</h1>
+    <h1>Download da Tabela dos IPs do Período</h1>
+        <label for="file_type">Escolha o tipo de arquivo para baixar:</label>
+        <select id="file_type" name="file_type">
+            <option value="excel">Excel</option>
+            <option value="csv">CSV</option>
+        </select>
+        <br>
+        <input type="submit" value="Baixar Tabela de IPs">
+    </form>
 </body>
 </html>

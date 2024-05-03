@@ -3,10 +3,14 @@
 <head>
     <title>Página Principal</title>
     <style>
+        body {
+            text-align: center;
+        }
+
         .button {
-            display: inline-block;
+            display: block;
+            margin: 10px auto;
             padding: 10px 20px;
-            margin: 5px;
             font-size: 16px;
             text-align: center;
             text-decoration: none;
@@ -15,26 +19,34 @@
             border: 1px solid #007bff;
             border-radius: 5px;
             cursor: pointer;
+            width: 200px; 
         }
 
-        /* Estilos para quando o mouse passa por cima do botão */
         .button:hover {
             background-color: #0056b3;
             border-color: #0056b3;
         }
 
         h1 {
-            text-align: center;
+            margin-top: 30px; 
+            font-size: 24px;
+        }
+
+        h2 {
+            margin-bottom: 50px; 
+            font-family: 'Arial Black', sans-serif; 
+            font-size: 36px; 
+            text-shadow: 2px 2px 4px #000000; 
+            color: #007bff; 
         }
     </style>
 </head>
 <body>
-    <h1>Selecione a tabela que deseja visualizar:</h1>
-    <ul>
-        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=1">Abril-Maio(2023)</a></li>
-        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=2">Setembro-Novembro(2023)</a></li>
-        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=3">Janeiro-Março(2024)</a></li>
-        <li><a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=4">Total-Coletado</a></li>
-    </ul>
+    <h2>MoBAt</h2>
+    <h1>Selecione o período que deseja visualizar:</h1>
+    <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=1">Abril-Maio(2023)</a>
+    <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=2">Setembro-Novembro(2023)</a>
+    <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=3">Janeiro-Março(2024)</a>
+    <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=4">Total-Coletado</a>
 </body>
 </html>

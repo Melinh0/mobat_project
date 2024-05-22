@@ -5,6 +5,8 @@
 </head>
 <body>
     <h1>Mapeamento das Features</h1>
+    <form method="post" action="{% url 'mapeamento_features' %}">
+        {% csrf_token %}
         <label for="feature">Escolha a feature que deseja mapear:</label>
         <select id="feature" name="feature">
             <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
@@ -33,12 +35,17 @@
             <option value="score_average_Mobat">score_average_Mobat</option>
         </select>
         <br>
-        <input type="submit" value="Mapear Feature">
+        <input type="submit" name="action" value="Mapear Feature">
     </form>
+
+    {% if plot %}
+    <img src="{{ plot }}" alt="Gráfico">
+    {% endif %}
     
+    <form method="post" action="{% url 'mapeamento_features' %}">
         {% csrf_token %}
         <input type="hidden" name="all_features" value="true">
-        <input type="submit" value="Baixar Todas as Features Mapeadas">
+        <input type="submit" name="action" value="Baixar Todas as Features Mapeadas">
     </form>
 </body>
 </html>

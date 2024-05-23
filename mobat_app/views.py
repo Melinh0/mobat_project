@@ -67,7 +67,6 @@ def graficos_comportamento(request):
     # Aqui você pode adicionar o código específico para essa funcionalidade
     return render(request, 'graficos_comportamento.html')
 
-
 def mapeamento_features(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -121,10 +120,19 @@ def mapeamento_features(request):
             data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
             df = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
 
+            mapeamento = {}
+            for coluna in df.columns:
+                contagem_valores = df[coluna].value_counts().reset_index()
+                contagem_valores.columns = [coluna, 'Quantidade']
+                sheet_name = coluna[:31]
+                mapeamento[coluna] = {'contagem_valores': contagem_valores, 'sheet_name': sheet_name}
+
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False)
+                for coluna, info in mapeamento.items():
+                    info['contagem_valores'].to_excel(writer, sheet_name=info['sheet_name'], index=False)
             buffer.seek(0)
+
             response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename="features_mapeadas.xlsx"'
             return response

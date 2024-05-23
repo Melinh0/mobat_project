@@ -5,6 +5,8 @@
 </head>
 <body>
     <h1>Gráfico de Dispersão</h1>
+    <form method="POST">
+        {% csrf_token %}
         <label for="x_axis">Selecione a feature para o eixo X:</label>
         <select id="x_axis" name="x_axis">
             <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
@@ -43,5 +45,11 @@
         <br>
         <input type="submit" value="Gerar Gráfico de Dispersão">
     </form>
+    {% if plot %}
+        <img src="{{ plot }}" alt="Gráfico de Dispersão">
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
 </body>
 </html>

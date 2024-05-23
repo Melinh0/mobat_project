@@ -2,9 +2,21 @@
 <html>
 <head>
     <title>Tabela de Acurácia e Tempo de Treinamento dos Modelos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>Tabela de Acurácia e Tempo de Treinamento dos Modelos</h1>
-    <button onclick="gerarTabela()">Gerar Tabela</button>
+    <div class="container mt-5">
+        <h1>Tabela de Acurácia e Tempo de Treinamento dos Modelos</h1>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="action" value="Gerar Tabela" class="btn btn-primary">Gerar Tabela</button>
+        </form>
+        {% if results_html %}
+            <h2 class="mt-4">Resultados</h2>
+            <div class="table-responsive">
+                {{ results_html|safe }}
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>

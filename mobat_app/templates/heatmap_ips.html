@@ -5,6 +5,13 @@
 </head>
 <body>
     <h1>HeatMap de Ocorrência dos IPs nos Países</h1>
-    <button onclick="gerarHeatmap()">Gerar HeatMap</button>
+    {% if image_path %}
+    <img src="{{ image_path }}" alt="Heatmap">
+    {% endif %}
+    <form method="post" action="{% url 'heatmap_ips' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="Gerar HeatMap">
+        <input type="submit" value="Gerar HeatMap">
+    </form>
 </body>
 </html>

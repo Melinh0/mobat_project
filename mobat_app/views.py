@@ -28,30 +28,31 @@ from xgboost import XGBRegressor
 from sklearn.linear_model import ElasticNet
 import sqlite3
 import base64
-import threading
+import matplotlib
+matplotlib.use('Agg') 
 
 def index(request):
     return render(request, 'index.html')
 
 def visualizar_funcionalidades(request):
     table_choice = request.GET.get('table_choice')
-    db_path = 'mobat_app/Seasons/PrimeiroSemestre2023'
+    db_path = 'mobat_app/Seasons/PrimeiroSemestre.sqlite'
     if table_choice == '2':
-        db_path = 'mobat_app/Seasons/SegundoSemestre2023'
+        db_path = 'mobat_app/Seasons/SegundoSemestre.sqlite'
     elif table_choice == '3':
-        db_path = 'mobat_app/Seasons/PrimeiroSemestre2024'
+        db_path = 'mobat_app/Seasons/TerceiroSemestre.sqlite'
     elif table_choice == '4':
-        db_path = 'mobat_app/Seasons/Total'
+        db_path = 'mobat_app/Seasons/Total.sqlite'
 
     request.session['db_path'] = db_path
 
     table_name = None
     if table_choice == '1':
-        table_name = 'PrimeiroSemestre2023'
+        table_name = 'PrimeiroSemestre'
     elif table_choice == '2':
-        table_name = 'SegundoSemestre2023'
+        table_name = 'SegundoSemestre'
     elif table_choice == '3':
-        table_name = 'PrimeiroSemestre2024'
+        table_name = 'TerceiroSemestre'
     elif table_choice == '4':
         table_name = 'Total'
 
@@ -166,9 +167,49 @@ def score_average_mobat(request):
     # Código para esta funcionalidade
     return render(request, 'score_average_mobat.html')
 
+def plot_country_score_average(df, country):
+    df_country = df[df['abuseipdb_country_code'] == country]
+
+    if df_country.empty:
+        return HttpResponse("Nenhum dado encontrado para o país selecionado.")
+
+    plt.figure(figsize=(16, 8))
+    bars = plt.bar(df_country['abuseipdb_country_code'], df_country['score_average_Mobat'], color='skyblue')
+    plt.title('Reputação por País')
+    plt.xlabel('País')
+    plt.ylabel('Média do Score Average Mobat')
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(axis='y')
+    for bar, score in zip(bars, df_country['score_average_Mobat']):
+        yval = score + 0.1
+        plt.text(bar.get_x() + bar.get_width()/2, yval, round(score, 2), ha='center', va='bottom', rotation=45)
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.945, bottom=0.177, left=0.049, right=0.991, hspace=0.2, wspace=0.2)
+    plt.show()
+
 def reputacao_pais(request):
-    print("Reputação por País")
-    # Código para esta funcionalidade
+    if request.method == 'POST':
+        country = request.POST.get('country')
+        action = request.POST.get('action')
+        if country == '' and action == 'Visualizar o País Escolhido':
+            return HttpResponse("Por favor, selecione um país válido.")
+
+        table_name = request.session.get('table_name')
+        db_path = request.session.get('db_path')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+        conn.close()
+
+        df = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
+
+        if action == 'Visualizar o País Escolhido':
+            plot_country_score_average(df, country)
+        elif action == 'Visualizar Todos os Países':
+            # Lógica para mostrar todos os países
+            # Chame uma função para plotar o gráfico de todos os países
+            pass
+
     return render(request, 'reputacao_pais.html')
 
 def upload_tabela_ips(request):
@@ -201,9 +242,72 @@ def download_all_ip_data(df, file_type):
     else:
         return HttpResponse("Tipo de arquivo inválido")
 
+def alpha2_to_alpha3(alpha2):
+    country = pycountry.countries.get(alpha_2=alpha2)
+    if country is not None:
+        return country.alpha_3
+    else:
+        return None
+
 def heatmap_ips(request):
-    print("HeatMap de Ocorrência dos Ips nos países")
-    # Código para esta funcionalidade
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'Gerar HeatMap':
+            table_name = request.session.get('table_name')
+            if table_name is None:
+                return redirect('index')
+
+            db_path = request.session.get('db_path')
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+            df = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
+
+            df_selected = df.dropna(subset=["abuseipdb_country_code"])
+            serie_country_counts = df_selected["abuseipdb_country_code"].value_counts()
+            min_count, max_count = serie_country_counts.min(), serie_country_counts.max()
+            df_country_counts = serie_country_counts.rename_axis("country_code").reset_index(name="count")
+            df_country_counts["country_code"] = df_country_counts["country_code"].apply(alpha2_to_alpha3)
+            df_country_counts.dropna(subset=["country_code"], inplace=True)
+            countries = set(df_country_counts["country_code"])
+            SHAPEFILE = "mobat_app/shapefiles/ne_10m_admin_0_countries.shp"
+            geo_df = gpd.read_file(SHAPEFILE)[["ADMIN", "ADM0_A3", "geometry"]]
+            geo_df.columns = ["country", "country_code", "geometry"]
+            geo_df = geo_df.drop(geo_df.loc[geo_df["country"] == "Antarctica"].index)
+            geo_df = geo_df.merge(df_country_counts, on="country_code", how="left")
+            geo_df["count"] = geo_df["count"].fillna(0)
+            geo_df["normalized_count"] = (geo_df["count"] - min_count) / (max_count - min_count)
+            fig, ax = plt.subplots(figsize=(20, 20))
+            geo_df.plot(
+                ax=ax,
+                column="normalized_count",
+                linewidth=0.5,
+                cmap="Reds",
+                legend=True,
+                legend_kwds={"label": "Quantidade de Ocorrência Normalizada", "orientation": "horizontal"},
+                edgecolor="gray",
+            )
+            plt.suptitle("Países com maior ocorrência de denúncias de IP", x=0.5, y=0.95, fontsize=20)
+            plt.axis("off")
+            plt.subplots_adjust(top=0.85, bottom=0.5, left=0.1, right=0.9, hspace=0.2, wspace=0.2)
+
+            temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            plt.savefig(temp_file.name)
+            plt.close()
+
+            image_path = temp_file.name
+            conn.close()
+
+            with open(image_path, "rb") as f:
+                data_uri = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+
+            os.remove(image_path)
+
+            context = {'image_path': data_uri}
+            return render(request, 'heatmap_ips.html', context)
+
     return render(request, 'heatmap_ips.html')
 
 def tabela_acuracia(request):
@@ -393,15 +497,6 @@ def grafico_dispersao(request):
         columns_str = ", ".join([f'"{col}"' for col in allowed_columns])
         data = cursor.execute(f"SELECT {columns_str} FROM {table_name}").fetchall()
         df = pd.DataFrame(data, columns=allowed_columns)
-
-        print("IBM_score:")
-        print(df['IBM_score'])
-
-        print("\nIBM_average history Score:")
-        print(df['IBM_average history Score'])
-
-        print("\nIBM_most common score:")
-        print(df['IBM_most common score'])
 
         x_data = df[x_axis]
         y_data = df[y_axis]

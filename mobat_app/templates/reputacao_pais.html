@@ -5,6 +5,8 @@
 </head>
 <body>
     <h1>Reputação por País</h1>
+    <form method="post" action="{% url 'reputacao_pais' %}">
+        {% csrf_token %}
         <label for="country">Selecione um país:</label>
         <select id="country" name="country">
             <option value="US">Estados Unidos</option>
@@ -56,10 +58,12 @@
             <option value="CH">Suíça</option>
         </select>
         <br>
-        <input type="submit" value="Visualizar o País Escolhido">
+        <input type="submit" name="action" value="Visualizar o País Escolhido">
     </form>
     <br>
-        <input type="submit" value="Visualizar Todos os Países">
+    <form method="post" action="{% url 'reputacao_pais' %}">
+        {% csrf_token %}
+        <input type="submit" name="action" value="Visualizar Todos os Países">
     </form>
 </body>
 </html>

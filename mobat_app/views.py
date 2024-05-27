@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.conf import settings
 import tempfile
+from io import BytesIO
 import io
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -29,6 +30,7 @@ from sklearn.linear_model import ElasticNet
 import sqlite3
 import base64
 import matplotlib
+from typing import Any, List
 matplotlib.use('Agg') 
 
 def index(request):
@@ -152,10 +154,111 @@ def clusters(request):
     # Código para esta funcionalidade
     return render(request, 'clusters.html')
 
+def plot_feature_selection(df: pd.DataFrame, allowed_columns: List[str], technique: str) -> str:
+    df_filtered = categorize_non_numeric_columns(df[allowed_columns])
+
+    def plot_variance_threshold():
+        selector_variance = VarianceThreshold()
+        selector_variance.fit(df_filtered)
+        variances = pd.Series(selector_variance.variances_, index=df_filtered.columns)
+        plot_bar(variances, 'Variância das Features')
+
+    def plot_select_kbest():
+        selector_kbest = SelectKBest(score_func=f_classif, k=5)
+        selector_kbest.fit(df_filtered.drop('score_average_Mobat', axis=1), df_filtered['score_average_Mobat'])
+        kbest_features = df_filtered.drop('score_average_Mobat', axis=1).columns[selector_kbest.get_support()]
+        plot_bar(selector_kbest.scores_[selector_kbest.get_support()], 'SelectKBest - Top 5 Features', list(kbest_features)) # type: ignore
+
+    def plot_lasso():
+        lasso = Lasso(alpha=0.1)
+        lasso.fit(df_filtered.drop('score_average_Mobat', axis=1), df_filtered['score_average_Mobat'])
+        lasso_coef = np.abs(lasso.coef_)
+        plot_bar(lasso_coef, 'Lasso Coefficients', list(df_filtered.drop('score_average_Mobat', axis=1).columns))
+
+    def plot_mutual_info():
+        mutual_info_vals = mutual_info_regression(df_filtered.drop('score_average_Mobat', axis=1), df_filtered['score_average_Mobat'])
+        plot_bar(mutual_info_vals, 'Mutual Information', list(df_filtered.drop('score_average_Mobat', axis=1).columns))
+
+    def plot_correlation_matrix():
+        plt.figure(figsize=(20, 10))
+        sns.heatmap(df_filtered.corr(), annot=False, cmap='coolwarm')
+        plt.title('Matriz de Correlação')
+        plt.subplots_adjust(top=0.945, bottom=0.5, left=0.125, right=0.9, hspace=0.2, wspace=0.2)
+
+    def plot_bar(data: Any, title: str, xlabels: List[str] = None): # type: ignore
+        if isinstance(data, np.ndarray):
+            data = pd.Series(data, index=xlabels)
+        plt.figure(figsize=(12, 6))
+        plt.bar(data.index, data)
+        plt.title(title)
+        plt.ylabel('Score')
+        plt.xticks(rotation=45, ha='right')
+        for i, v in enumerate(data):
+            plt.text(i, v + 0.01, f'{v:.2f}', ha='center', va='bottom', fontsize=8)
+        plt.subplots_adjust(top=0.945, bottom=0.315, left=0.15, right=0.9, hspace=0.2, wspace=0.2)
+
+    if technique == 'variance_threshold':
+        plot_variance_threshold()
+    elif technique == 'select_kbest':
+        plot_select_kbest()
+    elif technique == 'lasso':
+        plot_lasso()
+    elif technique == 'mutual_info':
+        plot_mutual_info()
+    elif technique == 'correlation_matrix':
+        plot_correlation_matrix()
+    else:
+        raise ValueError("Invalid technique")
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png', dpi=75)
+    plt.close()
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    graphic = base64.b64encode(image_png).decode('utf-8')
+
+    return graphic
+
 def selecao_caracteristicas(request):
-    print("Seleção de Características")
-    # Código para esta funcionalidade
-    return render(request, 'selecao_caracteristicas.html')
+    graphic = None  
+    if request.method == 'POST':
+        technique = request.POST.get('technique')
+        action = request.POST.get('action')
+        
+        if technique == '' and action == 'Visualizar Seleção de Características':
+            return HttpResponse("Por favor, selecione uma técnica válida.")
+        
+        table_name = request.session.get('table_name')
+        db_path = request.session.get('db_path')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+        conn.close()
+
+        df = pd.DataFrame(data, columns=[
+            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
+            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
+            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
+            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
+            'IBM_average_history_Score', 'IBM_most_common_score', 'virustotal_asn', 'SHODAN_asn',
+            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
+        ])
+
+        allowed_columns = [
+            'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_total_reports',
+            'abuseipdb_num_distinct_users', 'virustotal_reputation', 'harmless', 'malicious', 'suspicious',
+            'undetected', 'IBM_score', 'IBM_average_history_Score', 'IBM_most_common_score',
+            'score_average_Mobat'
+        ]
+        
+        if action == 'Visualizar Seleção de Características':
+            graphic = plot_feature_selection(df, allowed_columns, technique)
+        
+        if isinstance(graphic, str) and graphic.startswith("Nenhum dado"):
+            return HttpResponse(graphic)
+        
+    return render(request, 'selecao_caracteristicas.html', {'graphic': graphic})
 
 def importancias_ml(request):
     print("Importâncias para Machine Learning")
@@ -167,33 +270,69 @@ def score_average_mobat(request):
     # Código para esta funcionalidade
     return render(request, 'score_average_mobat.html')
 
-def plot_country_score_average(df, country):
-    df_country = df[df['abuseipdb_country_code'] == country]
+def plot_country_score_average(df, country=None):
+    country_names = {
+        'US': 'Estados Unidos', 'CN': 'China', 'SG': 'Singapura', 'DE': 'Alemanha', 'VN': 'Vietnã',
+        'KR': 'Coreia do Sul', 'IN': 'Índia', 'RU': 'Rússia', 'LT': 'Lituânia', 'TW': 'Taiwan',
+        'GB': 'Reino Unido', 'JP': 'Japão', 'IR': 'Irã', 'BR': 'Brasil', 'AR': 'Argentina',
+        'NL': 'Holanda', 'TH': 'Tailândia', 'CA': 'Canadá', 'PK': 'Paquistão', 'ID': 'Indonésia',
+        'ET': 'Etiópia', 'FR': 'França', 'BG': 'Bulgária', 'PA': 'Panamá', 'SA': 'Arábia Saudita',
+        'BD': 'Bangladesh', 'HK': 'Hong Kong', 'MA': 'Marrocos', 'EG': 'Egito', 'UA': 'Ucrânia',
+        'MX': 'México', 'UZ': 'Uzbequistão', 'ES': 'Espanha', 'AU': 'Austrália', 'CO': 'Colômbia',
+        'KZ': 'Cazaquistão', 'EC': 'Equador', 'BZ': 'Belize', 'SN': 'Senegal', 'None': 'None',
+        'IE': 'Irlanda', 'FI': 'Finlândia', 'ZA': 'África do Sul', 'IT': 'Itália', 'PH': 'Filipinas',
+        'CR': 'Costa Rica', 'CH': 'Suíça'
+    }
 
-    if df_country.empty:
-        return HttpResponse("Nenhum dado encontrado para o país selecionado.")
+    if country:
+        df = df[df['abuseipdb_country_code'] == country]
 
+    if df.empty:
+        return "Nenhum dado encontrado para o país selecionado." if country else "Nenhum dado disponível."
+
+    country_avg_scores = df.groupby('abuseipdb_country_code')['score_average_Mobat'].mean().sort_values(ascending=False)
+    country_avg_scores.index = country_avg_scores.index.map(country_names)
+    mean_of_means = country_avg_scores.mean()
+    country_avg_scores = country_avg_scores[~country_avg_scores.index.isna()]
+    
     plt.figure(figsize=(16, 8))
-    bars = plt.bar(df_country['abuseipdb_country_code'], df_country['score_average_Mobat'], color='skyblue')
+    bars = plt.bar(country_avg_scores.index.astype(str), country_avg_scores.values, color='skyblue')
+    plt.axhline(mean_of_means, linestyle='--', color='red', label=f'Média das médias: {mean_of_means:.2f}')
     plt.title('Reputação por País')
     plt.xlabel('País')
     plt.ylabel('Média do Score Average Mobat')
     plt.xticks(rotation=45, ha='right')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    extra_handles = [Line2D([0], [0], color='white', linewidth=0, marker='o', markersize=0, label='Score > MeanScore: Benigno\nScore < MeanScore: Malicioso')]
+    plt.legend(handles=handles + extra_handles, loc='upper right')
     plt.grid(axis='y')
-    for bar, score in zip(bars, df_country['score_average_Mobat']):
+    for bar, score in zip(bars, country_avg_scores.values):
         yval = score + 0.1
         plt.text(bar.get_x() + bar.get_width()/2, yval, round(score, 2), ha='center', va='bottom', rotation=45)
     plt.tight_layout()
     plt.subplots_adjust(top=0.945, bottom=0.177, left=0.049, right=0.991, hspace=0.2, wspace=0.2)
-    plt.show()
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    plt.close()
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+    
+    return graphic
 
 def reputacao_pais(request):
+    graphic = None  
     if request.method == 'POST':
         country = request.POST.get('country')
         action = request.POST.get('action')
+        
         if country == '' and action == 'Visualizar o País Escolhido':
             return HttpResponse("Por favor, selecione um país válido.")
-
+        
         table_name = request.session.get('table_name')
         db_path = request.session.get('db_path')
         conn = sqlite3.connect(db_path)
@@ -201,16 +340,24 @@ def reputacao_pais(request):
         data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
         conn.close()
 
-        df = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
+        df = pd.DataFrame(data, columns=[
+            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
+            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
+            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
+            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
+            'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn',
+            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
+        ])
 
         if action == 'Visualizar o País Escolhido':
-            plot_country_score_average(df, country)
+            graphic = plot_country_score_average(df, country)
         elif action == 'Visualizar Todos os Países':
-            # Lógica para mostrar todos os países
-            # Chame uma função para plotar o gráfico de todos os países
-            pass
-
-    return render(request, 'reputacao_pais.html')
+            graphic = plot_country_score_average(df)
+        
+        if isinstance(graphic, str) and graphic.startswith("Nenhum dado"):
+            return HttpResponse(graphic)
+        
+    return render(request, 'reputacao_pais.html', {'graphic': graphic})
 
 def upload_tabela_ips(request):
     if request.method == 'POST':
@@ -356,12 +503,11 @@ def tabela_acuracia(request):
 
     return render(request, 'tabela_acuracia.html', {'results_html': request.session.get('results_html')})
 
-def categorize_non_numeric_columns(df):
+def categorize_non_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    for col in df.select_dtypes(include=['object', 'category']):
+    for col in df.select_dtypes(include=['object', 'category']).columns:
         if col != 'IP':
-            df[col] = df[col].astype('category')
-            df[col] = df[col].cat.codes
+            df[col] = df[col].astype('category').cat.codes
     return df
 
 def preprocess_data(X):

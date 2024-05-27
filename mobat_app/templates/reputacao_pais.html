@@ -9,6 +9,7 @@
         {% csrf_token %}
         <label for="country">Selecione um país:</label>
         <select id="country" name="country">
+            <option value="">Selecione um país</option>
             <option value="US">Estados Unidos</option>
             <option value="CN">China</option>
             <option value="SG">Singapura</option>
@@ -57,13 +58,13 @@
             <option value="CR">Costa Rica</option>
             <option value="CH">Suíça</option>
         </select>
-        <br>
-        <input type="submit" name="action" value="Visualizar o País Escolhido">
+        <button type="submit" name="action" value="Visualizar o País Escolhido">Visualizar o País Escolhido</button>
+        <button type="submit" name="action" value="Visualizar Todos os Países">Visualizar Todos os Países</button>
     </form>
-    <br>
-    <form method="post" action="{% url 'reputacao_pais' %}">
-        {% csrf_token %}
-        <input type="submit" name="action" value="Visualizar Todos os Países">
-    </form>
+    
+    {% if graphic %}
+        <h2>Gráfico de Reputação</h2>
+        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Reputação">
+    {% endif %}
 </body>
 </html>

@@ -5,15 +5,20 @@
 </head>
 <body>
     <h1>Seleção de Características</h1>
+    <form method="POST">
+        {% csrf_token %}
         <label for="technique">Escolha a técnica de seleção de características:</label>
         <select id="technique" name="technique">
             <option value="variance_threshold">Variance Threshold</option>
             <option value="select_kbest">SelectKBest</option>
             <option value="lasso">Lasso</option>
             <option value="mutual_info">Mutual Information</option>
-            <option value="correlation_matrix">Matriz de Correlação</option>
+            <option value="correlation_matrix">Correlation Matrix</option>
         </select>
-        <input type="submit" value="Visualizar Seleção de Características">
+        <input type="submit" name="action" value="Visualizar Seleção de Características">
     </form>
+    {% if graphic %}
+    <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Seleção de Características">
+{% endif %}
 </body>
 </html>

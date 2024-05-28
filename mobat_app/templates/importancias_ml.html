@@ -2,20 +2,40 @@
 <html>
 <head>
     <title>Importâncias para Machine Learning</title>
+    <style>
+        .center {
+            text-align: center;
+        }
+        .chart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Importâncias para Machine Learning</h1>
-        <label for="model_type">Selecione o modelo de Machine Learning:</label>
-        <select id="model_type" name="model_type">
-            <option value="GradientBoostingRegressor">Gradient Boosting Regressor</option>
-            <option value="RandomForestRegressor">Random Forest Regressor</option>
-            <option value="ExtraTreesRegressor">Extra Trees Regressor</option>
-            <option value="AdaBoostRegressor">AdaBoost Regressor</option>
-            <option value="XGBRegressor">XGBoost Regressor</option>
-            <option value="ElasticNet">ElasticNet</option>
-        </select>
-        <br>
-        <input type="submit" value="Visualizar Gráfico de Importância">
-    </form>
+    <div class="center">
+        <h1>Importâncias para Machine Learning</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="model_type">Selecione o modelo de Machine Learning:</label>
+            <select id="model_type" name="model_type">
+                <option value="GradientBoostingRegressor">Gradient Boosting Regressor</option>
+                <option value="RandomForestRegressor">Random Forest Regressor</option>
+                <option value="ExtraTreesRegressor">Extra Trees Regressor</option>
+                <option value="AdaBoostRegressor">AdaBoost Regressor</option>
+                <option value="XGBRegressor">XGBoost Regressor</option>
+                <option value="ElasticNet">ElasticNet</option>
+            </select>
+            <br><br>
+            <input type="submit" value="Visualizar Gráfico de Importância">
+        </form>
+    </div>
+    <div class="chart">
+        {% if graphic %}
+            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Importância">
+        {% endif %}
+    </div>
 </body>
 </html>

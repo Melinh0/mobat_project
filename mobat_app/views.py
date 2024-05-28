@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.conf import settings
 import tempfile
 from io import BytesIO
@@ -16,8 +16,6 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 import numpy as np
-import tkinter as tk
-from tkinter import Tk, filedialog, ttk, messagebox
 from matplotlib.lines import Line2D
 import pytz
 import geopandas as gpd
@@ -67,10 +65,33 @@ def visualizar_funcionalidades(request):
     request.session['table_name'] = table_name
     return render(request, 'visualizar_funcionalidades.html', context)
 
+def get_available_ips(df_selected):
+    return df_selected['IP'].unique().tolist()
+
 def graficos_comportamento(request):
-    print("Gráficos de Comportamento")
-    # Aqui você pode adicionar o código específico para essa funcionalidade
-    return render(request, 'graficos_comportamento.html')
+    if request.method == 'POST':
+        ip_address = request.POST.get('ip_address')
+        chart_type = request.POST.get('chart_type')
+
+        if ip_address and chart_type:
+            # Adicione aqui o código para gerar o gráfico com base no endereço IP e tipo de gráfico selecionados
+            # Lembre-se de passar os dados necessários para a renderização do gráfico
+            pass  # Apenas um espaço reservado, você precisa adicionar o código real aqui
+
+    table_name = request.session.get('table_name')
+    if table_name is None:
+        return redirect('index')
+
+    db_path = request.session.get('db_path')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+    df_selected = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
+
+    ips = get_available_ips(df_selected)
+
+    return render(request, 'graficos_comportamento.html', {'ip_list': ips})
 
 def mapeamento_features(request):
     if request.method == 'POST':
@@ -144,15 +165,83 @@ def mapeamento_features(request):
 
     return render(request, 'mapeamento_features.html')
 
-def plot_grafico():
-    plt.figure(figsize=(16, 8))
-    # Código de plotagem do gráfico aqui
-    plt.show()
+def clusters(request: HttpRequest) -> HttpResponse:
+    allowed_columns = [
+        'abuseipdb_confidence_score',
+        'abuseipdb_total_reports',
+        'abuseipdb_num_distinct_users',
+        'virustotal_reputation',
+        'harmless',
+        'malicious',
+        'suspicious',
+        'undetected',
+        'IBM_score',
+        'IBM_average history Score',  
+        'IBM_most common score',
+        'score_average_Mobat'
+    ]
 
-def clusters(request):
-    print("Clusters")
-    # Código para esta funcionalidade
-    return render(request, 'clusters.html')
+    graphic = None  
+    if request.method == 'POST':
+        feature = request.POST.get('feature')
+        num_clusters_str = request.POST.get('clusters')
+        if feature not in allowed_columns:
+            return HttpResponse("Feature não permitida.", status=400)
+
+        num_clusters = int(num_clusters_str) if num_clusters_str else 0
+
+        table_name = request.session.get('table_name')
+        db_path = request.session.get('db_path')
+        if not db_path:
+            return HttpResponse("Caminho do banco de dados não encontrado.", status=400)
+
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {table_name}")
+        data = cursor.fetchall()
+        conn.close()
+
+        df = pd.DataFrame(data, columns=[
+            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
+            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
+            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
+            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
+            'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn',
+            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
+        ])
+
+        graphic = plot_clusters(df, feature, num_clusters)
+
+    return render(request, 'clusters.html', {'graphic': graphic, 'allowed_columns': allowed_columns})
+
+def plot_clusters(df, selected_feature, num_clusters):
+    X = df[[selected_feature]]
+    kmeans = KMeans(n_clusters=num_clusters, random_state=0, n_init=10).fit(X)
+    df['cluster'] = kmeans.labels_
+    mean_feature_all = df[selected_feature].mean()
+    plt.figure(figsize=(16, 8))
+    labels = []
+    for cluster in df['cluster'].unique():
+        cluster_data = df[df['cluster'] == cluster]
+        plt.scatter(cluster_data.index, cluster_data[selected_feature], label=f'Cluster {cluster}')
+        unique_ips = cluster_data['IP'].nunique()
+        labels.append(f'Cluster {cluster} [Num. of Unique IPs: {unique_ips}]')
+    labels.append(f'Mean {selected_feature} All: {mean_feature_all:.2f}')
+    plt.axhline(y=mean_feature_all, color='r', linestyle='--', label=f'Mean {selected_feature} All: {mean_feature_all:.2f}')
+    plt.title(f'Clusters da coluna "{selected_feature}"')
+    plt.ylabel(selected_feature)
+    plt.legend(labels=labels)
+    plt.grid(True)
+    plt.tight_layout()
+
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png', dpi=75)
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    graphic = base64.b64encode(image_png).decode('utf-8')
+
+    return graphic
 
 def plot_feature_selection(df: pd.DataFrame, allowed_columns: List[str], technique: str) -> str:
     df_filtered = categorize_non_numeric_columns(df[allowed_columns])
@@ -260,14 +349,143 @@ def selecao_caracteristicas(request):
         
     return render(request, 'selecao_caracteristicas.html', {'graphic': graphic})
 
-def importancias_ml(request):
-    print("Importâncias para Machine Learning")
-    # Código para esta funcionalidade
+def importancias_ml(request: HttpRequest) -> HttpResponse:
+    if request.method == 'POST':
+        model_type = request.POST.get('model_type')
+        table_name = request.session.get('table_name')
+        db_path = request.session.get('db_path')
+        if not db_path:
+            return HttpResponse("Caminho do banco de dados não encontrado.", status=400)
+        
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+        conn.close()
+
+        df = pd.DataFrame(data, columns=[
+            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
+            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
+            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
+            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
+            'IBM_average_history_Score', 'IBM_most_common_score', 'virustotal_asn', 'SHODAN_asn',
+            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
+        ])
+
+        allowed_columns = [
+            'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_total_reports',
+            'abuseipdb_num_distinct_users', 'virustotal_reputation', 'harmless', 'malicious', 'suspicious',
+            'undetected', 'IBM_score', 'IBM_average_history_Score', 'IBM_most_common_score',
+            'score_average_Mobat'
+        ]
+        graphic = plot_feature_importance(df, allowed_columns, model_type) # type: ignore
+        return render(request, 'importancias_ml.html', {'graphic': graphic})
     return render(request, 'importancias_ml.html')
 
+def plot_feature_importance(df: pd.DataFrame, allowed_columns: list, model_type: str) -> str:
+    df_filtered = df[allowed_columns]
+    df_filtered = categorize_non_numeric_columns(df_filtered)
+    
+    if model_type == 'GradientBoostingRegressor':
+        model = GradientBoostingRegressor()
+    elif model_type == 'RandomForestRegressor':
+        model = RandomForestRegressor()
+    elif model_type == 'ExtraTreesRegressor':
+        model = ExtraTreesRegressor()
+    elif model_type == 'AdaBoostRegressor':
+        model = AdaBoostRegressor()
+    elif model_type == 'XGBRegressor':
+        model = XGBRegressor()
+    elif model_type == 'ElasticNet':
+        model = ElasticNet()
+    else:
+        raise ValueError("Model type not supported. Please choose a supported model.")
+    
+    model.fit(df_filtered.drop('score_average_Mobat', axis=1), df_filtered['score_average_Mobat'])
+    
+    if hasattr(model, 'feature_importances_'):
+        feature_importances = model.feature_importances_  # type: ignore
+    elif hasattr(model, 'coef_'):
+        feature_importances = np.abs(model.coef_)  # type: ignore
+    else:
+        raise ValueError("Model does not have attribute 'feature_importances_' or 'coef_'.")
+    
+    ordered_feature_importances = [feature_importances[i] for i, col in enumerate(allowed_columns) if col != 'score_average_Mobat']
+    
+    plt.figure(figsize=(16, 8))
+    plt.bar([col for col in allowed_columns if col != 'score_average_Mobat'], ordered_feature_importances)
+    plt.xlabel('Características')
+    plt.ylabel('Importância')
+    plt.title(f'Importância das características no modelo {model_type} para score_average_Mobat')
+    plt.xticks(rotation=45, ha='right')
+    for feature, importance in zip([col for col in allowed_columns if col != 'score_average_Mobat'], ordered_feature_importances):
+        plt.text(feature, importance + 0.005, f'{importance:.2f}', ha='center', va='bottom', rotation=45, fontsize=8)
+    plt.tight_layout()
+    
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png', dpi=75)
+    plt.close()
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    graphic = base64.b64encode(image_png).decode('utf-8')
+
+    return graphic
+
+def plot_top_ips_score_average(df, num_ips):
+    top_ips = df['IP'].value_counts().nlargest(num_ips).index
+    ip_variations = []
+    for ip in top_ips:
+        ip_data = df[df['IP'] == ip]
+        score_variation = ip_data['score_average_Mobat'].max() - ip_data['score_average_Mobat'].min()
+        ip_variations.append((ip, score_variation))
+    top_ips_sorted = [ip for ip, _ in sorted(ip_variations, key=lambda x: x[1], reverse=True)]
+    fig, ax = plt.subplots(figsize=(17, 10))  
+    x_ticks = range(len(top_ips_sorted))
+    x_labels = ['' for _ in x_ticks]  
+    for ip in top_ips_sorted:
+        ip_data = df[df['IP'] == ip]
+        ax.plot(ip_data['IP'], ip_data['score_average_Mobat'], label=f'Variação: {ip_data["score_average_Mobat"].max() - ip_data["score_average_Mobat"].min():.2f}', linewidth=4)
+    ax.set_title('Comportamento dos IPs mais recorrentes em relação ao Score Average Mobat')
+    ax.set_ylabel('Score Average Mobat')
+    legend = ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=6)
+    for text in legend.get_texts():
+        text.set_fontsize('x-small')  
+    ax.grid(True)
+    ax.set_xticks(x_ticks)
+    ax.set_xticklabels(x_labels, rotation=90)
+    plt.subplots_adjust(top=0.92, bottom=0.3, left=0.1, right=0.9, hspace=0.2, wspace=0.2)  
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png', dpi=75)
+    plt.close()
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    graphic = base64.b64encode(image_png).decode('utf-8')
+    
+    return graphic
+
 def score_average_mobat(request):
-    print("Score Average Mobat dos IPs com maior variação")
-    # Código para esta funcionalidade
+    if request.method == 'POST':
+        num_ips = int(request.POST.get('num_ips', 1))
+        table_name = request.session.get('table_name')
+        db_path = request.session.get('db_path')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+
+        df = pd.DataFrame(data, columns=[
+            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
+            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
+            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
+            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
+            'IBM_average_history_Score', 'IBM_most_common_score', 'virustotal_asn', 'SHODAN_asn',
+            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
+        ])
+
+        conn.close()
+        graphic = plot_top_ips_score_average(df, num_ips)
+        return render(request, 'score_average_mobat.html', {'graphic': graphic})
     return render(request, 'score_average_mobat.html')
 
 def plot_country_score_average(df, country=None):

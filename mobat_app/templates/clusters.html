@@ -5,21 +5,13 @@
 </head>
 <body>
     <h1>Clusters</h1>
+    <form method="post" action="{% url 'clusters' %}">
+        {% csrf_token %}
         <label for="feature">Escolha uma feature:</label>
         <select id="feature" name="feature">
-            <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
-            <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
-            <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
-            <option value="virustotal_reputation">virustotal_reputation</option>
-            <option value="harmless">harmless</option>
-            <option value="malicious">malicious</option>
-            <option value="suspicious">suspicious</option>
-            <option value="undetected">undetected</option>
-            <option value="IBM_score">IBM_score</option>
-            <option value="IBM_average history Score">IBM_average history Score</option>
-            <option value="IBM_most common score">IBM_most common score</option>
-            <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
-            <option value="score_average_Mobat">score_average_Mobat</option>
+            {% for feature in allowed_columns %}
+                <option value="{{ feature }}">{{ feature }}</option>
+            {% endfor %}
         </select>
         <br>
         <label for="clusters">Digite a quantidade de clusters que deseja visualizar:</label>
@@ -27,5 +19,8 @@
         <br>
         <input type="submit" value="Visualizar Clusters">
     </form>
+    {% if graphic %}
+        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Clusters">
+    {% endif %}
 </body>
 </html>

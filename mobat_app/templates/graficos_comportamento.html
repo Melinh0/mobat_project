@@ -2,10 +2,25 @@
 <html>
 <head>
     <title>Gráficos de Comportamento</title>
+    <style>
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+    </style>    
 </head>
 <body>
     <h1>Gráficos de Comportamento</h1>
     <form method="post">
+        {% csrf_token %}
         <label for="ip_address">Selecione o endereço IP:</label>
         <select id="ip_address" name="ip_address">
             {% for ip in ip_list %}
@@ -26,5 +41,11 @@
         <br>
         <input type="submit" value="Gerar Gráfico">
     </form>
+    {% if graphic %}
+        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Comportamento">
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
 </body>
 </html>

@@ -2,20 +2,32 @@
 <html>
 <head>
     <title>Tabela de Acurácia e Tempo de Treinamento dos Modelos</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .center {
+            text-align: center;
+            margin: 0 auto; 
+            max-width: 800px; 
+        }
+        .chart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container mt-5 center">
         <h1>Tabela de Acurácia e Tempo de Treinamento dos Modelos</h1>
         <form method="post">
             {% csrf_token %}
-            <button type="submit" name="action" value="Gerar Tabela" class="btn btn-primary">Gerar Tabela</button>
+            <button type="submit" name="action" value="Gerar Tabela" class="btn btn-primary mx-auto d-block">Gerar Tabela</button>
         </form>
         {% if results_html %}
-            <h2 class="mt-4">Resultados</h2>
-            <div class="table-responsive">
+            <h2 class="mt-4 text-center">Resultados</h2>
+            <div class="table-responsive mx-auto" style="width: 80%; margin-top: 30px; margin-bottom: 50px; margin-left: 140px;">
                 {{ results_html|safe }}
-            </div>
+            </div>        
         {% endif %}
     </div>
 </body>

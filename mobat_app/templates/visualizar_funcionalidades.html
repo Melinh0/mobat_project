@@ -4,7 +4,7 @@
     <title>Visualizar Funcionalidades</title>
     <style>
         .button {
-            display: inline-block;
+            display: block;
             padding: 10px 20px;
             margin: 5px;
             font-size: 16px;
@@ -36,10 +36,12 @@
             padding: 0;
             margin: 0;
             text-align: center;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
         }
 
         li {
-            display: inline-block;
             margin: 10px;
         }
     </style>
@@ -58,7 +60,7 @@
         <li><a class="button" href="{% url 'heatmap_ips' %}">HeatMap de Ocorrência dos IPs nos países</a></li>
         <li><a class="button" href="{% url 'tabela_acuracia' %}">Tabela de Acurácia e Tempo de Treinamento dos Modelos</a></li>
         <li><a class="button" href="{% url 'grafico_dispersao' %}">Gráfico de Dispersão</a></li>
-        <li><a class="button orange-button" href="{% url 'index' %}">Voltar para o início</a></li>
+        <li><a class="button orange-button" href="{% url 'index' %}">Voltar</a></li>
     </ul>
 </body>
 </html>

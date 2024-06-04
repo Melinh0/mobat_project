@@ -2,16 +2,83 @@
 <html>
 <head>
     <title>HeatMap de Ocorrência dos IPs nos Países</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 80%; 
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        img {
+            max-width: 80%; 
+            height: auto;
+            margin-top: 20px;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+        
+    </style>
 </head>
 <body>
-    <h1>HeatMap de Ocorrência dos IPs nos Países</h1>
-    {% if image_path %}
-    <img src="{{ image_path }}" alt="Heatmap">
-    {% endif %}
-    <form method="post" action="{% url 'heatmap_ips' %}">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="Gerar HeatMap">
-        <input type="submit" value="Gerar HeatMap">
-    </form>
+    <div class="container">
+        <h1>HeatMap de Ocorrência dos IPs nos Países</h1>
+        {% if image_path %}
+            <img src="{{ image_path }}" alt="Heatmap">
+        {% endif %}
+        <form method="post" action="{% url 'heatmap_ips' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="Gerar HeatMap">
+            <input type="submit" value="Gerar HeatMap">
+        </form>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

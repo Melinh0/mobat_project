@@ -3,32 +3,83 @@
 <head>
     <title>Tabela de Acurácia e Tempo de Treinamento dos Modelos</title>
     <style>
-        .center {
-            text-align: center;
-            margin: 0 auto; 
-            max-width: 800px; 
-        }
-        .chart {
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .table-responsive {
+            margin-top: 20px;
+            width: 80%;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
             margin-top: 20px;
         }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
-    <div class="container mt-5 center">
+    <div class="container">
         <h1>Tabela de Acurácia e Tempo de Treinamento dos Modelos</h1>
         <form method="post">
             {% csrf_token %}
-            <button type="submit" name="action" value="Gerar Tabela" class="btn btn-primary mx-auto d-block">Gerar Tabela</button>
+            <button type="submit" name="action" value="Gerar Tabela">Gerar Tabela</button>
         </form>
         {% if results_html %}
-            <h2 class="mt-4 text-center">Resultados</h2>
-            <div class="table-responsive mx-auto" style="width: 80%; margin-top: 30px; margin-bottom: 50px; margin-left: 140px;">
-                {{ results_html|safe }}
-            </div>        
+            <h2 class="mt-4">Resultados</h2>
+            <div class="table-responsive mx-auto" style="width: 80%; margin-top: 30px; margin-bottom: 50px; margin-left: 115px;">
+            {{ results_html|safe }}
+            </div>
         {% endif %}
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
     </div>
 </body>
 </html>

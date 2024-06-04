@@ -2,50 +2,125 @@
 <html>
 <head>
     <title>Mapeamento das Features</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, select, input[type="submit"] {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .graphic-container {
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+        
+    </style>
 </head>
 <body>
-    <h1>Mapeamento das Features</h1>
-    <form method="post" action="{% url 'mapeamento_features' %}">
-        {% csrf_token %}
-        <label for="feature">Escolha a feature que deseja mapear:</label>
-        <select id="feature" name="feature">
-            <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
-            <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
-            <option value="abuseipdb_country_code">abuseipdb_country_code</option>
-            <option value="abuseipdb_isp">abuseipdb_isp</option>
-            <option value="abuseipdb_domain">abuseipdb_domain</option>
-            <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
-            <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
-            <option value="abuseipdb_last_reported_at">abuseipdb_last_reported_at</option>
-            <option value="virustotal_reputation">virustotal_reputation</option>
-            <option value="virustotal_regional_internet_registry">virustotal_regional_internet_registry</option>
-            <option value="virustotal_as_owner">virustotal_as_owner</option>
-            <option value="harmless">harmless</option>
-            <option value="malicious">malicious</option>
-            <option value="suspicious">suspicious</option>
-            <option value="undetected">undetected</option>
-            <option value="IBM_score">IBM_score</option>
-            <option value="IBM_average history Score">IBM_average history Score</option>
-            <option value="IBM_most common score">IBM_most common score</option>
-            <option value="virustotal_asn">virustotal_asn</option>
-            <option value="SHODAN_asn">SHODAN_asn</option>
-            <option value="SHODAN_isp">SHODAN_isp</option>
-            <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
-            <option value="ALIENVAULT_asn">ALIENVAULT_asn</option>
-            <option value="score_average_Mobat">score_average_Mobat</option>
-        </select>
-        <br>
-        <input type="submit" name="action" value="Mapear Feature">
-    </form>
+    <div class="container">
+        <h1>Mapeamento das Features</h1>
+        <form method="post" action="{% url 'mapeamento_features' %}">
+            {% csrf_token %}
+            <label for="feature">Escolha a feature que deseja mapear:</label>
+            <select id="feature" name="feature">
+                <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
+                <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
+                <option value="abuseipdb_country_code">abuseipdb_country_code</option>
+                <option value="abuseipdb_isp">abuseipdb_isp</option>
+                <option value="abuseipdb_domain">abuseipdb_domain</option>
+                <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
+                <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
+                <option value="abuseipdb_last_reported_at">abuseipdb_last_reported_at</option>
+                <option value="virustotal_reputation">virustotal_reputation</option>
+                <option value="virustotal_regional_internet_registry">virustotal_regional_internet_registry</option>
+                <option value="virustotal_as_owner">virustotal_as_owner</option>
+                <option value="harmless">harmless</option>
+                <option value="malicious">malicious</option>
+                <option value="suspicious">suspicious</option>
+                <option value="undetected">undetected</option>
+                <option value="IBM_score">IBM_score</option>
+                <option value="IBM_average history Score">IBM_average history Score</option>
+                <option value="IBM_most common score">IBM_most common score</option>
+                <option value="virustotal_asn">virustotal_asn</option>
+                <option value="SHODAN_asn">SHODAN_asn</option>
+                <option value="SHODAN_isp">SHODAN_isp</option>
+                <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
+                <option value="ALIENVAULT_asn">ALIENVAULT_asn</option>
+                <option value="score_average_Mobat">score_average_Mobat</option>
+            </select>
+            <br>
+            <input type="submit" name="action" value="Mapear Feature">
+        </form>
 
-    {% if plot %}
-    <img src="{{ plot }}" alt="Gráfico">
-    {% endif %}
-    
-    <form method="post" action="{% url 'mapeamento_features' %}">
-        {% csrf_token %}
-        <input type="hidden" name="all_features" value="true">
-        <input type="submit" name="action" value="Baixar Todas as Features Mapeadas">
-    </form>
+        {% if plot %}
+            <div class="graphic-container">
+                <h2>Gráfico</h2>
+                <img src="{{ plot }}" alt="Gráfico">
+            </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'mapeamento_features' %}">
+            {% csrf_token %}
+            <input type="hidden" name="all_features" value="true">
+            <input type="submit" name="action" value="Baixar Todas as Features Mapeadas">
+        </form>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

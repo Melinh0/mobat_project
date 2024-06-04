@@ -2,25 +2,97 @@
 <html>
 <head>
     <title>Clusters</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, select, input[type="submit"] {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .chart {
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Clusters</h1>
-    <form method="post" action="{% url 'clusters' %}">
-        {% csrf_token %}
-        <label for="feature">Escolha uma feature:</label>
-        <select id="feature" name="feature">
-            {% for feature in allowed_columns %}
-                <option value="{{ feature }}">{{ feature }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <label for="clusters">Digite a quantidade de clusters que deseja visualizar:</label>
-        <input type="number" id="clusters" name="clusters" min="1" value="1">
-        <br>
-        <input type="submit" value="Visualizar Clusters">
-    </form>
-    {% if graphic %}
-        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Clusters">
-    {% endif %}
+    <div class="container">
+        <h1>Clusters</h1>
+        <form method="post" action="{% url 'clusters' %}">
+            {% csrf_token %}
+            <label for="feature">Escolha uma feature:</label>
+            <select id="feature" name="feature">
+                {% for feature in allowed_columns %}
+                    <option value="{{ feature }}">{{ feature }}</option>
+                {% endfor %}
+            </select>
+            <br>
+            <label for="clusters">Digite a quantidade de clusters que deseja visualizar:</label>
+            <input type="number" id="clusters" name="clusters" min="1" value="1">
+            <br>
+            <input type="submit" value="Visualizar Clusters">
+        </form>
+        {% if graphic %}
+            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Clusters">
+        {% endif %}
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

@@ -2,69 +2,144 @@
 <html>
 <head>
     <title>Reputação por País</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, select, button {
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .graphic-container {
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Reputação por País</h1>
-    <form method="post" action="{% url 'reputacao_pais' %}">
-        {% csrf_token %}
-        <label for="country">Selecione um país:</label>
-        <select id="country" name="country">
-            <option value="">Selecione um país</option>
-            <option value="US">Estados Unidos</option>
-            <option value="CN">China</option>
-            <option value="SG">Singapura</option>
-            <option value="DE">Alemanha</option>
-            <option value="VN">Vietnã</option>
-            <option value="KR">Coreia do Sul</option>
-            <option value="IN">Índia</option>
-            <option value="RU">Rússia</option>
-            <option value="LT">Lituânia</option>
-            <option value="TW">Taiwan</option>
-            <option value="GB">Reino Unido</option>
-            <option value="JP">Japão</option>
-            <option value="IR">Irã</option>
-            <option value="BR">Brasil</option>
-            <option value="AR">Argentina</option>
-            <option value="NL">Holanda</option>
-            <option value="TH">Tailândia</option>
-            <option value="CA">Canadá</option>
-            <option value="PK">Paquistão</option>
-            <option value="ID">Indonésia</option>
-            <option value="ET">Etiópia</option>
-            <option value="FR">França</option>
-            <option value="BG">Bulgária</option>
-            <option value="PA">Panamá</option>
-            <option value="SA">Arábia Saudita</option>
-            <option value="BD">Bangladesh</option>
-            <option value="HK">Hong Kong</option>
-            <option value="MA">Marrocos</option>
-            <option value="EG">Egito</option>
-            <option value="UA">Ucrânia</option>
-            <option value="MX">México</option>
-            <option value="UZ">Uzbequistão</option>
-            <option value="ES">Espanha</option>
-            <option value="AU">Austrália</option>
-            <option value="CO">Colômbia</option>
-            <option value="KZ">Cazaquistão</option>
-            <option value="EC">Equador</option>
-            <option value="BZ">Belize</option>
-            <option value="SN">Senegal</option>
-            <option value="None">None</option>
-            <option value="IE">Irlanda</option>
-            <option value="FI">Finlândia</option>
-            <option value="ZA">África do Sul</option>
-            <option value="IT">Itália</option>
-            <option value="PH">Filipinas</option>
-            <option value="CR">Costa Rica</option>
-            <option value="CH">Suíça</option>
-        </select>
-        <button type="submit" name="action" value="Visualizar o País Escolhido">Visualizar o País Escolhido</button>
-        <button type="submit" name="action" value="Visualizar Todos os Países">Visualizar Todos os Países</button>
-    </form>
-    
-    {% if graphic %}
-        <h2>Gráfico de Reputação</h2>
-        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Reputação">
-    {% endif %}
+    <div class="container">
+        <h1>Reputação por País</h1>
+        <form method="post" action="{% url 'reputacao_pais' %}">
+            {% csrf_token %}
+            <label for="country">Selecione um país:</label>
+            <select id="country" name="country">
+                <option value="">Selecione um país</option>
+                <option value="US">Estados Unidos</option>
+                <option value="CN">China</option>
+                <option value="SG">Singapura</option>
+                <option value="DE">Alemanha</option>
+                <option value="VN">Vietnã</option>
+                <option value="KR">Coreia do Sul</option>
+                <option value="IN">Índia</option>
+                <option value="RU">Rússia</option>
+                <option value="LT">Lituânia</option>
+                <option value="TW">Taiwan</option>
+                <option value="GB">Reino Unido</option>
+                <option value="JP">Japão</option>
+                <option value="IR">Irã</option>
+                <option value="BR">Brasil</option>
+                <option value="AR">Argentina</option>
+                <option value="NL">Holanda</option>
+                <option value="TH">Tailândia</option>
+                <option value="CA">Canadá</option>
+                <option value="PK">Paquistão</option>
+                <option value="ID">Indonésia</option>
+                <option value="ET">Etiópia</option>
+                <option value="FR">França</option>
+                <option value="BG">Bulgária</option>
+                <option value="PA">Panamá</option>
+                <option value="SA">Arábia Saudita</option>
+                <option value="BD">Bangladesh</option>
+                <option value="HK">Hong Kong</option>
+                <option value="MA">Marrocos</option>
+                <option value="EG">Egito</option>
+                <option value="UA">Ucrânia</option>
+                <option value="MX">México</option>
+                <option value="UZ">Uzbequistão</option>
+                <option value="ES">Espanha</option>
+                <option value="AU">Austrália</option>
+                <option value="CO">Colômbia</option>
+                <option value="KZ">Cazaquistão</option>
+                <option value="EC">Equador</option>
+                <option value="BZ">Belize</option>
+                <option value="SN">Senegal</option>
+                <option value="None">None</option>
+                <option value="IE">Irlanda</option>
+                <option value="FI">Finlândia</option>
+                <option value="ZA">África do Sul</option>
+                <option value="IT">Itália</option>
+                <option value="PH">Filipinas</option>
+                <option value="CR">Costa Rica</option>
+                <option value="CH">Suíça</option>
+            </select>
+            <br>
+            <button type="submit" name="action" value="Visualizar o País Escolhido">Visualizar o País Escolhido</button>
+            <button type="submit" name="action" value="Visualizar Todos os Países">Visualizar Todos os Países</button>
+        </form>
+
+        {% if graphic %}
+            <div class="graphic-container">
+                <h2>Gráfico de Reputação</h2>
+                <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Reputação">
+            </div>
+        {% endif %}
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

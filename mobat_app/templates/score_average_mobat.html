@@ -3,32 +3,91 @@
 <head>
     <title>Score Average Mobat dos IPs com maior variação</title>
     <style>
-        .center {
-            text-align: center;
-        }
-        .chart {
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, input {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .graphic-container {
             margin-top: 20px;
         }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
-    <div class="center">
+    <div class="container">
         <h1>Score Average Mobat dos IPs com maior variação</h1>
         <form method="post">
             {% csrf_token %}
             <label for="num_ips">Quantos IPs deseja visualizar?</label>
             <input type="number" id="num_ips" name="num_ips" min="1" required>
-            <br><br>
+            <br>
             <input type="submit" value="Gerar Gráfico">
         </form>
-    </div>
-    <div class="chart">
-        {% if graphic %}
-            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico dos IPs">
-        {% endif %}
+        <div class="graphic-container">
+            {% if graphic %}
+                <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico dos IPs">
+            {% endif %}
+            <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+        </div>
     </div>
 </body>
 </html>

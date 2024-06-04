@@ -2,18 +2,86 @@
 <html>
 <head>
     <title>Download da Tabela dos IPs do Período</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, select, input {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Download da Tabela dos IPs do Período</h1>
-    <form id="download-form" action="" method="POST">
-        {% csrf_token %}
-        <label for="file_type">Escolha o tipo de arquivo para baixar:</label>
-        <select id="file_type" name="file_type">
-            <option value="excel">Excel</option>
-            <option value="csv">CSV</option>
-        </select>
-        <br>
-        <input type="submit" value="Baixar Tabela de IPs">
-    </form>
+    <div class="container">
+        <h1>Download da Tabela dos IPs do Período</h1>
+        <form id="download-form" action="" method="POST">
+            {% csrf_token %}
+            <label for="file_type">Escolha o tipo de arquivo para baixar:</label>
+            <select id="file_type" name="file_type">
+                <option value="excel">Excel</option>
+                <option value="csv">CSV</option>
+                <option value="parquet">Parquet</option>
+                <option value="json">JSON</option>
+                <option value="orc">ORC</option>
+                <option value="avro">Avro</option>
+                <option value="xml">XML</option>
+            </select>
+            <br>
+            <input type="submit" value="Baixar Tabela de IPs">
+        </form>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

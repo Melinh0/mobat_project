@@ -867,7 +867,6 @@ def plot_feature_importance(df: pd.DataFrame, allowed_columns: list, model_type:
     for feature, importance in zip([col for col in allowed_columns if col != 'score_average_Mobat'], ordered_feature_importances):
         plt.text(feature, importance + 0.005, f'{importance:.2f}', ha='center', va='bottom', rotation=45, fontsize=8)
     plt.tight_layout()
-    
     buffer = BytesIO()
     plt.savefig(buffer, format='png', dpi=75)
     plt.close()
@@ -875,7 +874,6 @@ def plot_feature_importance(df: pd.DataFrame, allowed_columns: list, model_type:
     image_png = buffer.getvalue()
     buffer.close()
     graphic = base64.b64encode(image_png).decode('utf-8')
-
     return graphic
 
 def plot_top_ips_score_average(df, num_ips):
@@ -886,7 +884,7 @@ def plot_top_ips_score_average(df, num_ips):
         score_variation = ip_data['score_average_Mobat'].max() - ip_data['score_average_Mobat'].min()
         ip_variations.append((ip, score_variation))
     top_ips_sorted = [ip for ip, _ in sorted(ip_variations, key=lambda x: x[1], reverse=True)]
-    fig, ax = plt.subplots(figsize=(17, 10))  
+    fig, ax = plt.subplots(figsize=(17, 8))  
     x_ticks = range(len(top_ips_sorted))
     x_labels = ['' for _ in x_ticks]  
     for ip in top_ips_sorted:
@@ -901,7 +899,6 @@ def plot_top_ips_score_average(df, num_ips):
     ax.set_xticks(x_ticks)
     ax.set_xticklabels(x_labels, rotation=90)
     plt.subplots_adjust(top=0.92, bottom=0.3, left=0.1, right=0.9, hspace=0.2, wspace=0.2)  
-
     buffer = BytesIO()
     plt.savefig(buffer, format='png', dpi=75)
     plt.close()
@@ -909,7 +906,6 @@ def plot_top_ips_score_average(df, num_ips):
     image_png = buffer.getvalue()
     buffer.close()
     graphic = base64.b64encode(image_png).decode('utf-8')
-    
     return graphic
 
 def score_average_mobat(request):
@@ -1028,7 +1024,7 @@ def upload_tabela_ips(request):
     if request.method == 'POST':
         file_type = request.POST.get('file_type')
 
-        if file_type == 'excel' or file_type == 'csv':
+        if file_type in ['excel', 'csv', 'parquet', 'json', 'orc', 'avro', 'xml']:
             table_name = request.session.get('table_name')
             db_path = settings.BASE_DIR / request.session.get('db_path')
 
@@ -1039,20 +1035,47 @@ def upload_tabela_ips(request):
 
     return render(request, 'upload_tabela_ips.html')
 
+def clean_xml_tag(tag):
+    tag = tag.replace(' ', '_')  
+    tag = ''.join(c for c in tag if c.isalnum() or c in ['_', '-'])  
+    return tag
+
 def download_all_ip_data(df, file_type):
     df_filled = df.fillna('None')
     if file_type == 'excel':
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=tabela_ips.xlsx'
         df_filled.to_excel(response, index=False)
-        return response
     elif file_type == 'csv':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=tabela_ips.csv'
         df_filled.to_csv(response, index=False)
-        return response
+    elif file_type == 'parquet':
+        response = HttpResponse(content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename=tabela_ips.parquet'
+        df_filled.to_parquet(response, index=False)
+    elif file_type == 'json':
+        response = HttpResponse(content_type='application/json')
+        response['Content-Disposition'] = 'attachment; filename=tabela_ips.json'
+        df_filled.to_json(response, orient='records')
+    elif file_type == 'orc':
+        response = HttpResponse(content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename=tabela_ips.orc'
+        df_filled.to_orc(response, index=False)
+    elif file_type == 'avro':
+        response = HttpResponse(content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename=tabela_ips.avro'
+        df_filled.to_avro(response, index=False)
+    elif file_type == 'xml':
+        response = HttpResponse(content_type='application/xml')
+        response['Content-Disposition'] = 'attachment; filename=tabela_ips.xml'
+        df_filled.columns = [clean_xml_tag(col) for col in df_filled.columns]
+        xml_data = df_filled.to_xml(index=False)
+        response.write(xml_data)
     else:
         return HttpResponse("Tipo de arquivo inválido")
+
+    return response
 
 def alpha2_to_alpha3(alpha2):
     country = pycountry.countries.get(alpha_2=alpha2)
@@ -1091,7 +1114,7 @@ def heatmap_ips(request):
             geo_df = geo_df.merge(df_country_counts, on="country_code", how="left")
             geo_df["count"] = geo_df["count"].fillna(0)
             geo_df["normalized_count"] = (geo_df["count"] - min_count) / (max_count - min_count)
-            fig, ax = plt.subplots(figsize=(20, 20))
+            fig, ax = plt.subplots(figsize=(20, 10))
             geo_df.plot(
                 ax=ax,
                 column="normalized_count",
@@ -1103,7 +1126,7 @@ def heatmap_ips(request):
             )
             plt.suptitle("Países com maior ocorrência de denúncias de IP", x=0.5, y=0.95, fontsize=20)
             plt.axis("off")
-            plt.subplots_adjust(top=0.85, bottom=0.5, left=0.1, right=0.9, hspace=0.2, wspace=0.2)
+            plt.subplots_adjust(top=0.9, bottom=0.08, left=0.03, right=0.95, hspace=0.2, wspace=0.2)
 
             temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
             plt.savefig(temp_file.name)

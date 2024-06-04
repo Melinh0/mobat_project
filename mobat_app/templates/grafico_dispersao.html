@@ -2,54 +2,130 @@
 <html>
 <head>
     <title>Gráfico de Dispersão</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, select, input[type="submit"] {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .graphic-container {
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: orange;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Gráfico de Dispersão</h1>
-    <form method="POST">
-        {% csrf_token %}
-        <label for="x_axis">Selecione a feature para o eixo X:</label>
-        <select id="x_axis" name="x_axis">
-            <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
-            <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
-            <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
-            <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
-            <option value="virustotal_reputation">virustotal_reputation</option>
-            <option value="harmless">harmless</option>
-            <option value="malicious">malicious</option>
-            <option value="suspicious">suspicious</option>
-            <option value="undetected">undetected</option>
-            <option value="IBM_score">IBM_score</option>
-            <option value="IBM_average history Score">IBM_average history Score</option>
-            <option value="IBM_most common score">IBM_most common score</option>
-            <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
-            <option value="score_average_Mobat">score_average_Mobat</option>
-        </select>
-        <br>
-        <label for="y_axis">Selecione a feature para o eixo Y:</label>
-        <select id="y_axis" name="y_axis">
-            <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
-            <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
-            <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
-            <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
-            <option value="virustotal_reputation">virustotal_reputation</option>
-            <option value="harmless">harmless</option>
-            <option value="malicious">malicious</option>
-            <option value="suspicious">suspicious</option>
-            <option value="undetected">undetected</option>
-            <option value="IBM_score">IBM_score</option>
-            <option value="IBM_average history Score">IBM_average history Score</option>
-            <option value="IBM_most common score">IBM_most common score</option>
-            <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
-            <option value="score_average_Mobat">score_average_Mobat</option>
-        </select>
-        <br>
-        <input type="submit" value="Gerar Gráfico de Dispersão">
-    </form>
-    {% if plot %}
-        <img src="{{ plot }}" alt="Gráfico de Dispersão">
-    {% endif %}
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
+    <div class="container">
+        <h1>Gráfico de Dispersão</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <label for="x_axis">Selecione a feature para o eixo X:</label>
+            <select id="x_axis" name="x_axis">
+                <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
+                <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
+                <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
+                <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
+                <option value="virustotal_reputation">virustotal_reputation</option>
+                <option value="harmless">harmless</option>
+                <option value="malicious">malicious</option>
+                <option value="suspicious">suspicious</option>
+                <option value="undetected">undetected</option>
+                <option value="IBM_score">IBM_score</option>
+                <option value="IBM_average history Score">IBM_average history Score</option>
+                <option value="IBM_most common score">IBM_most common score</option>
+                <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
+                <option value="score_average_Mobat">score_average_Mobat</option>
+            </select>
+            <br>
+            <label for="y_axis">Selecione a feature para o eixo Y:</label>
+            <select id="y_axis" name="y_axis">
+                <option value="abuseipdb_is_whitelisted">abuseipdb_is_whitelisted</option>
+                <option value="abuseipdb_confidence_score">abuseipdb_confidence_score</option>
+                <option value="abuseipdb_total_reports">abuseipdb_total_reports</option>
+                <option value="abuseipdb_num_distinct_users">abuseipdb_num_distinct_users</option>
+                <option value="virustotal_reputation">virustotal_reputation</option>
+                <option value="harmless">harmless</option>
+                <option value="malicious">malicious</option>
+                <option value="suspicious">suspicious</option>
+                <option value="undetected">undetected</option>
+                <option value="IBM_score">IBM_score</option>
+                <option value="IBM_average history Score">IBM_average history Score</option>
+                <option value="IBM_most common score">IBM_most common score</option>
+                <option value="ALIENVAULT_reputation">ALIENVAULT_reputation</option>
+                <option value="score_average_Mobat">score_average_Mobat</option>
+            </select>
+            <br>
+            <input type="submit" value="Gerar Gráfico de Dispersão">
+        </form>
+        {% if plot %}
+            <div class="graphic-container">
+                <h2>Gráfico de Dispersão</h2>
+                <img src="{{ plot }}" alt="Gráfico de Dispersão">
+            </div>
+        {% endif %}
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

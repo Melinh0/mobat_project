@@ -3,6 +3,59 @@
 <head>
     <title>Gráficos de Comportamento</title>
     <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, select, input[type="submit"] {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .graphic-container {
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
         .button-link {
             display: inline-block;
             padding: 10px 20px;
@@ -10,42 +63,44 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
+            margin-top: 20px;
         }
-    
+
         .button-link:hover {
             background-color: #0056b3;
         }
     </style>    
 </head>
 <body>
-    <h1>Gráficos de Comportamento</h1>
-    <form method="post">
-        {% csrf_token %}
-        <label for="ip_address">Selecione o endereço IP:</label>
-        <select id="ip_address" name="ip_address">
-            {% for ip in ip_list %}
-            <option value="{{ ip }}">{{ ip }}</option>
-            {% endfor %}
-        </select>
+    <div class="container">
+        <h1>Gráficos de Comportamento</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="ip_address">Selecione o endereço IP:</label>
+            <select id="ip_address" name="ip_address">
+                {% for ip in ip_list %}
+                <option value="{{ ip }}">{{ ip }}</option>
+                {% endfor %}
+            </select>
+            <br>
+            <label for="chart_type">Selecione o tipo de gráfico:</label>
+            <select id="chart_type" name="chart_type">
+                <option value="location">Localização</option>
+                <option value="reports">Relatórios</option>
+                <option value="score_average">Média de Pontuação</option>
+                <option value="last_report">Último Relatório</option>
+                <option value="time_period">Período de Tempo</option>
+                <option value="ibm_scores">Pontuações IBM</option>
+                <option value="virustotal_stats">Estatísticas do VirusTotal</option>
+            </select>
+            <br>
+            <input type="submit" value="Gerar Gráfico">
+        </form>
+        {% if graphic %}
+            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Comportamento">
+        {% endif %}
         <br>
-        <label for="chart_type">Selecione o tipo de gráfico:</label>
-        <select id="chart_type" name="chart_type">
-            <option value="location">Localização</option>
-            <option value="reports">Relatórios</option>
-            <option value="score_average">Média de Pontuação</option>
-            <option value="last_report">Último Relatório</option>
-            <option value="time_period">Período de Tempo</option>
-            <option value="ibm_scores">Pontuações IBM</option>
-            <option value="virustotal_stats">Estatísticas do VirusTotal</option>
-        </select>
-        <br>
-        <input type="submit" value="Gerar Gráfico">
-    </form>
-    {% if graphic %}
-        <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Comportamento">
-    {% endif %}
-    
-    <br>
-    <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+    </div>
 </body>
 </html>

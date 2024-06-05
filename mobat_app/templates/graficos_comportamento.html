@@ -30,7 +30,7 @@
             align-items: center;
         }
 
-        label, select, input[type="submit"] {
+        label, input[type="submit"] {
             margin-bottom: 10px;
         }
 
@@ -76,12 +76,13 @@
         <h1>Gráficos de Comportamento</h1>
         <form method="post">
             {% csrf_token %}
-            <label for="ip_address">Selecione o endereço IP:</label>
-            <select id="ip_address" name="ip_address">
+            <label for="ip_address">Digite ou selecione o endereço IP:</label>
+            <input type="text" id="ip_address" name="ip_address" list="ip_list">
+            <datalist id="ip_list">
                 {% for ip in ip_list %}
-                <option value="{{ ip }}">{{ ip }}</option>
+                <option value="{{ ip }}">
                 {% endfor %}
-            </select>
+            </datalist>
             <br>
             <label for="chart_type">Selecione o tipo de gráfico:</label>
             <select id="chart_type" name="chart_type">
@@ -102,5 +103,23 @@
         <br>
         <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
     </div>
+
+    <script>
+        document.getElementById('ip_address').addEventListener('input', function() {
+            var input, filter, options, i;
+            input = document.getElementById('ip_address');
+            filter = input.value.toUpperCase();
+            datalist = document.getElementById("ip_list");
+            options = datalist.getElementsByTagName('option');
+            for (i = 0; i < options.length; i++) {
+                txtValue = options[i].textContent || options[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    options[i].style.display = "";
+                } else {
+                    options[i].style.display = "none";
+                }
+            }
+        });
+    </script>
 </body>
 </html>

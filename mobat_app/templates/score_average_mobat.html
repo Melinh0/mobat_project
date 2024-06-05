@@ -18,6 +18,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
         }
 
         h1 {
@@ -48,11 +49,15 @@
         }
 
         .graphic-container {
-            margin-top: 20px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         img {
             max-width: 100%;
+            max-height: 60vh; 
             height: auto;
         }
 
@@ -75,10 +80,14 @@
 <body>
     <div class="container">
         <h1>Score Average Mobat dos IPs com maior variação</h1>
-        <form method="post">
+        <form method="post" id="form">
             {% csrf_token %}
             <label for="num_ips">Quantos IPs deseja visualizar?</label>
             <input type="number" id="num_ips" name="num_ips" min="1" required>
+            <label for="top">Top:</label>
+            <input type="number" id="top" name="top" value="0.92" step="0.01" min="0" max="1" required>
+            <label for="bottom">Bottom:</label>
+            <input type="number" id="bottom" name="bottom" value="0.3" step="0.01" min="0" max="1" required>
             <br>
             <input type="submit" value="Gerar Gráfico">
         </form>
@@ -86,8 +95,8 @@
             {% if graphic %}
                 <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico dos IPs">
             {% endif %}
-            <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
         </div>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
     </div>
 </body>
 </html>

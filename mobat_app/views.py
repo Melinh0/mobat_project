@@ -876,7 +876,7 @@ def plot_feature_importance(df: pd.DataFrame, allowed_columns: list, model_type:
     graphic = base64.b64encode(image_png).decode('utf-8')
     return graphic
 
-def plot_top_ips_score_average(df, num_ips):
+def plot_top_ips_score_average(df, num_ips, top=0.92, bottom=0.3):
     top_ips = df['IP'].value_counts().nlargest(num_ips).index
     ip_variations = []
     for ip in top_ips:
@@ -884,21 +884,26 @@ def plot_top_ips_score_average(df, num_ips):
         score_variation = ip_data['score_average_Mobat'].max() - ip_data['score_average_Mobat'].min()
         ip_variations.append((ip, score_variation))
     top_ips_sorted = [ip for ip, _ in sorted(ip_variations, key=lambda x: x[1], reverse=True)]
-    fig, ax = plt.subplots(figsize=(17, 8))  
+
+    fig, ax = plt.subplots(figsize=(17, 6))  
     x_ticks = range(len(top_ips_sorted))
-    x_labels = ['' for _ in x_ticks]  
+    x_labels = top_ips_sorted  
+
     for ip in top_ips_sorted:
         ip_data = df[df['IP'] == ip]
-        ax.plot(ip_data['IP'], ip_data['score_average_Mobat'], label=f'Variação: {ip_data["score_average_Mobat"].max() - ip_data["score_average_Mobat"].min():.2f}', linewidth=4)
+        ax.plot(ip_data['IP'], ip_data['score_average_Mobat'], label=f'{ip}: Variação {ip_data["score_average_Mobat"].max() - ip_data["score_average_Mobat"].min():.2f}', linewidth=4)
+
     ax.set_title('Comportamento dos IPs mais recorrentes em relação ao Score Average Mobat')
     ax.set_ylabel('Score Average Mobat')
     legend = ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=6)
     for text in legend.get_texts():
         text.set_fontsize('x-small')  
+
     ax.grid(True)
     ax.set_xticks(x_ticks)
-    ax.set_xticklabels(x_labels, rotation=90)
-    plt.subplots_adjust(top=0.92, bottom=0.3, left=0.1, right=0.9, hspace=0.2, wspace=0.2)  
+    ax.set_xticklabels([''] * len(x_labels), rotation=90, fontsize='small') 
+    plt.subplots_adjust(top=top, bottom=bottom, left=0.1, right=0.95, hspace=0.2, wspace=0.2)  
+
     buffer = BytesIO()
     plt.savefig(buffer, format='png', dpi=75)
     plt.close()
@@ -906,11 +911,14 @@ def plot_top_ips_score_average(df, num_ips):
     image_png = buffer.getvalue()
     buffer.close()
     graphic = base64.b64encode(image_png).decode('utf-8')
+
     return graphic
 
 def score_average_mobat(request):
     if request.method == 'POST':
         num_ips = int(request.POST.get('num_ips', 1))
+        top = float(request.POST.get('top', 0.92))
+        bottom = float(request.POST.get('bottom', 0.3))
         table_name = request.session.get('table_name')
         db_path = request.session.get('db_path')
         conn = sqlite3.connect(db_path)
@@ -927,7 +935,7 @@ def score_average_mobat(request):
         ])
 
         conn.close()
-        graphic = plot_top_ips_score_average(df, num_ips)
+        graphic = plot_top_ips_score_average(df, num_ips, top=top, bottom=bottom)
         return render(request, 'score_average_mobat.html', {'graphic': graphic})
     return render(request, 'score_average_mobat.html')
 
@@ -1338,7 +1346,7 @@ def grafico_dispersao(request):
         y_value_counts = y_data.value_counts()
         y_weights = y_data.map(y_value_counts)
 
-        plt.figure(figsize=(18, 12))
+        plt.figure(figsize=(12, 7))
         plt.scatter(x_data, y_data, s=y_weights*10, color='blue', alpha=0.6)
         plt.title(f'Dispersão: {x_axis} vs {y_axis}')
         plt.xlabel(x_axis)

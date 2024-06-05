@@ -49,11 +49,11 @@
         }
 
         .graphic-container {
-            margin-top: 20px;
+            margin-top: -6px;
         }
 
         img {
-            max-width: 100%;
+            max-width: 90%;
             height: auto;
         }
 
@@ -64,7 +64,7 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .button-link:hover {
@@ -118,7 +118,6 @@
         </form>
         {% if plot %}
             <div class="graphic-container">
-                <h2>Gráfico de Dispersão</h2>
                 <img src="{{ plot }}" alt="Gráfico de Dispersão">
             </div>
         {% endif %}

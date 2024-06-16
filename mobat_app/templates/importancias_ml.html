@@ -18,6 +18,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 80%;
         }
 
         h1 {
@@ -30,7 +31,7 @@
             align-items: center;
         }
 
-        label, select, input[type="submit"] {
+        label, select {
             margin-bottom: 10px;
         }
 
@@ -41,19 +42,17 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
         }
 
         input[type="submit"]:hover {
             background-color: #0056b3;
         }
 
-        .chart {
-            margin-top: 20px;
-        }
-
         img {
-            max-width: 100%;
+            max-width: 80%;
             height: auto;
+            margin-top: 20px;
         }
 
         .button-link {
@@ -69,13 +68,12 @@
         .button-link:hover {
             background-color: #0056b3;
         }
-
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Importâncias para Machine Learning</h1>
-        <form method="post">
+        <form method="post" action="{% url 'importancias_ml' %}">
             {% csrf_token %}
             <label for="model_type">Selecione o modelo de Machine Learning:</label>
             <select id="model_type" name="model_type">
@@ -86,15 +84,18 @@
                 <option value="XGBRegressor">XGBoost Regressor</option>
                 <option value="ElasticNet">ElasticNet</option>
             </select>
-            <br>
-            <input type="submit" value="Visualizar Gráfico de Importância">
+            <input type="submit" name="action" value="Visualizar Gráfico de Importância">
         </form>
-        <div class="chart">
-            {% if graphic %}
-                <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Importância">
-            {% endif %}
-            <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
-        </div>
+        {% if graphic %}
+            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Importância">
+            <form method="post" action="{% url 'importancias_ml' %}">    
+                {% csrf_token %}
+                <input type="hidden" name="action" value="Baixar Gráfico">
+                <input type="hidden" name="model_type" value="{{ model_type }}">
+                <input type="submit" value="Baixar Gráfico">
+            </form>
+        {% endif %}
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
     </div>
 </body>
 </html>

@@ -60,15 +60,24 @@
         .button-link {
             display: inline-block;
             padding: 10px 20px;
-            background-color: orange;
+            background-color: #007bff;
             color: white;
             text-decoration: none;
             border-radius: 5px;
             margin-top: 10px;
+            border: none; /* Adiciona esta linha */
         }
 
         .button-link:hover {
             background-color: #0056b3;
+        }
+
+        .button-link-back {
+            background-color: orange;
+        }
+
+        .button-link-back:hover {
+            background-color: #cc8400;
         }
 
     </style>
@@ -119,12 +128,16 @@
         {% if plot %}
             <div class="graphic-container">
                 <img src="{{ plot }}" alt="Gráfico de Dispersão">
+                <form method="GET">
+                    <input type="hidden" name="download" value="true">
+                    <button type="submit" class="button-link">Baixar Gráfico</button>
+                </form>
             </div>
         {% endif %}
         {% if error %}
             <p style="color: red;">{{ error }}</p>
         {% endif %}
-        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link button-link-back">Voltar</a>
     </div>
 </body>
 </html>

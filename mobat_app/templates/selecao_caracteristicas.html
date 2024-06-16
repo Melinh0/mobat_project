@@ -67,7 +67,7 @@
         }
 
         .button-link:hover {
-            background-color: #0056b3;
+            background-color: #cc8400;
         }
 
     </style>
@@ -89,7 +89,13 @@
             <input type="submit" name="action" value="Visualizar Seleção de Características">
         </form>
         {% if graphic %}
-            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Seleção de Características">
+            <div class="chart">
+                <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Seleção de Características">
+                <form method="GET">
+                    <input type="hidden" name="download" value="true">
+                    <input type="submit" value="Baixar Gráfico" class="button-link">
+                </form>
+            </div>
         {% endif %}
         <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
     </div>

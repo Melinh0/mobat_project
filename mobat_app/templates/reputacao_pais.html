@@ -70,6 +70,10 @@
             background-color: #0056b3;
         }
 
+        .button-link-blue {
+            background-color: #007bff;
+        }
+
     </style>
 </head>
 <body>
@@ -119,7 +123,6 @@
                 <option value="EC">Equador</option>
                 <option value="BZ">Belize</option>
                 <option value="SN">Senegal</option>
-                <option value="None">None</option>
                 <option value="IE">Irlanda</option>
                 <option value="FI">Finlândia</option>
                 <option value="ZA">África do Sul</option>
@@ -137,6 +140,7 @@
             <div class="graphic-container">
                 <h2>Gráfico de Reputação</h2>
                 <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Reputação">
+                <a href="?download=true" class="button-link button-link-blue">Baixar Gráfico</a>
             </div>
         {% endif %}
         <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>

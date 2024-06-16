@@ -85,9 +85,10 @@
             </select>
             <br>
             <label for="clusters">Digite a quantidade de clusters que deseja visualizar:</label>
-            <input type="number" id="clusters" name="clusters" min="1" value="1">
+            <input type="number" id="clusters" name="clusters" min="1" value="{{ num_clusters }}">
             <br>
-            <input type="submit" value="Visualizar Clusters">
+            <input type="submit" name="action" value="Visualizar Clusters">
+            <input type="submit" name="action" value="Baixar Gráfico">
         </form>
         {% if graphic %}
             <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Clusters">

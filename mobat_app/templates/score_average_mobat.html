@@ -64,7 +64,7 @@
         .button-link {
             display: inline-block;
             padding: 10px 20px;
-            background-color: orange;
+            background-color: #007bff;
             color: white;
             text-decoration: none;
             border-radius: 5px;
@@ -72,6 +72,14 @@
         }
 
         .button-link:hover {
+            background-color: #0056b3;
+        }
+
+        .button-voltar {
+            background-color: orange; 
+        }
+
+        .button-voltar:hover {
             background-color: #0056b3;
         }
 
@@ -94,9 +102,10 @@
         <div class="graphic-container">
             {% if graphic %}
                 <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico dos IPs">
+                <a href="?download=true" class="button-link">Baixar Gráfico</a>
             {% endif %}
         </div>
-        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link button-voltar">Voltar</a>
     </div>
 </body>
 </html>

@@ -64,9 +64,26 @@
             text-decoration: none;
             border-radius: 5px;
             margin-top: 20px;
+            cursor: pointer;
         }
 
         .button-link:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilo para ambos os botões */
+        input[type="submit"],
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
             background-color: #0056b3;
         }
     </style>    
@@ -74,10 +91,10 @@
 <body>
     <div class="container">
         <h1>Gráficos de Comportamento</h1>
-        <form method="post">
+        <form method="post" action="{% url 'graficos_comportamento' %}">
             {% csrf_token %}
             <label for="ip_address">Digite ou selecione o endereço IP:</label>
-            <input type="text" id="ip_address" name="ip_address" list="ip_list">
+            <input type="text" id="ip_address" name="ip_address" list="ip_list" value="{{ ip_address }}">
             <datalist id="ip_list">
                 {% for ip in ip_list %}
                 <option value="{{ ip }}">
@@ -95,7 +112,8 @@
                 <option value="virustotal_stats">Estatísticas do VirusTotal</option>
             </select>
             <br>
-            <input type="submit" value="Gerar Gráfico">
+            <input type="submit" name="action" value="Gerar Gráfico">
+            <button type="submit" name="action" value="Baixar Gráfico">Baixar Gráfico</button>
         </form>
         {% if graphic %}
             <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Comportamento">

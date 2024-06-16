@@ -72,6 +72,12 @@
         <h1>HeatMap de Ocorrência dos IPs nos Países</h1>
         {% if image_path %}
             <img src="{{ image_path }}" alt="Heatmap">
+            <form method="post" action="{% url 'heatmap_ips' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="Baixar HeatMap">
+                <input type="hidden" name="temp_file_path" value="{{ temp_file_path }}">
+                <input type="submit" value="Baixar HeatMap">
+            </form>
         {% endif %}
         <form method="post" action="{% url 'heatmap_ips' %}">
             {% csrf_token %}

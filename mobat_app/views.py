@@ -45,6 +45,7 @@ def visualizar_funcionalidades(request):
         db_path = 'mobat_app/Seasons/Total.sqlite'
 
     request.session['db_path'] = db_path
+    request.session['table_choice'] = table_choice
 
     table_name = None
     if table_choice == '1':
@@ -67,7 +68,7 @@ def visualizar_funcionalidades(request):
         return render(request, 'visualizar_funcionalidades.html', context)
     else:
         return HttpResponse("Error: Invalid table choice")
-
+    
 def get_available_ips(df_selected):
     return df_selected['IP'].unique().tolist()
 
@@ -517,7 +518,17 @@ def graficos_comportamento(request):
             else:
                 graphic = None
 
-            return render(request, 'graficos_comportamento.html', {'graphic': graphic, 'ip_list': get_available_ips(df_selected)})
+            if request.POST.get('action') == 'Baixar Gráfico' and graphic:
+                image_data = base64.b64decode(graphic)
+                response = HttpResponse(image_data, content_type='image/png')
+                response['Content-Disposition'] = 'attachment; filename="grafico.png"'
+                return response
+
+            return render(request, 'graficos_comportamento.html', {
+                'graphic': graphic,
+                'ip_list': get_available_ips(df_selected),
+                'ip_address': ip_address,
+            })
 
     table_name = request.session.get('table_name')
     if table_name is None:
@@ -538,7 +549,10 @@ def graficos_comportamento(request):
 
     ips = get_available_ips(df_selected)
 
-    return render(request, 'graficos_comportamento.html', {'ip_list': ips})
+    return render(request, 'graficos_comportamento.html', {
+        'ip_list': ips,
+        'ip_address': '',
+    })
 
 def mapeamento_features(request):
     if request.method == 'POST':
@@ -568,14 +582,17 @@ def mapeamento_features(request):
             for bar, valor in zip(bars, value_counts.values):
                 plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1, str(valor), ha='center', va='bottom')
             plt.subplots_adjust(top=0.94, bottom=0.215, left=0.125, right=0.9, hspace=0.2, wspace=0.2)
-            temp_file = os.path.join('/tmp', 'temp_plot.png')
-            plt.savefig(temp_file)
+
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+                plt.savefig(temp_file.name)
+                temp_file_path = temp_file.name
+
             plt.close()
 
-            with open(temp_file, "rb") as f:
+            with open(temp_file_path, "rb") as f:
                 data_uri = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
 
-            os.remove(temp_file)
+            os.remove(temp_file_path)
 
             return render(request, 'mapeamento_features.html', {'plot': data_uri})
 
@@ -623,19 +640,23 @@ def clusters(request: HttpRequest) -> HttpResponse:
         'suspicious',
         'undetected',
         'IBM_score',
-        'IBM_average history Score',  
+        'IBM_average history Score',
         'IBM_most common score',
         'score_average_Mobat'
     ]
 
-    graphic = None  
+    graphic = None
+    num_clusters = 1
     if request.method == 'POST':
+        action = request.POST.get('action')
         feature = request.POST.get('feature')
         num_clusters_str = request.POST.get('clusters')
         if feature not in allowed_columns:
             return HttpResponse("Feature não permitida.", status=400)
 
-        num_clusters = int(num_clusters_str) if num_clusters_str else 0
+        num_clusters = int(num_clusters_str) if num_clusters_str else 1
+
+        request.session['num_clusters'] = num_clusters  # Store the number of clusters in session
 
         table_name = request.session.get('table_name')
         db_path = request.session.get('db_path')
@@ -658,8 +679,28 @@ def clusters(request: HttpRequest) -> HttpResponse:
         ])
 
         graphic = plot_clusters(df, feature, num_clusters)
+        request.session['graphic'] = graphic  
 
-    return render(request, 'clusters.html', {'graphic': graphic, 'allowed_columns': allowed_columns})
+        if action == 'Visualizar Clusters':
+            context = {'graphic': graphic, 'allowed_columns': allowed_columns, 'num_clusters': num_clusters}
+            return render(request, 'clusters.html', context)
+
+        elif action == 'Baixar Gráfico':
+            graphic = request.session.get('graphic')
+            if graphic:
+                with io.BytesIO(base64.b64decode(graphic)) as buffer:
+                    buffer.seek(0)
+                    temp_file_path = os.path.join(os.path.dirname(__file__), 'graphic.png')
+                    with open(temp_file_path, "wb") as f:
+                        f.write(buffer.read())
+                with open(temp_file_path, "rb") as f:
+                    response = HttpResponse(f.read(), content_type='image/png')
+                    response['Content-Disposition'] = 'attachment; filename="clusters.png"'
+                os.remove(temp_file_path)
+                del request.session['graphic']
+                return response
+
+    return render(request, 'clusters.html', {'graphic': graphic, 'allowed_columns': allowed_columns, 'num_clusters': num_clusters})
 
 def plot_clusters(df, selected_feature, num_clusters):
     X = df[[selected_feature]]
@@ -790,43 +831,22 @@ def selecao_caracteristicas(request):
         
         if action == 'Visualizar Seleção de Características':
             graphic = plot_feature_selection(df, allowed_columns, technique)
-        
+
         if isinstance(graphic, str) and graphic.startswith("Nenhum dado"):
             return HttpResponse(graphic)
-        
-    return render(request, 'selecao_caracteristicas.html', {'graphic': graphic})
 
-def importancias_ml(request: HttpRequest) -> HttpResponse:
-    if request.method == 'POST':
-        model_type = request.POST.get('model_type')
-        table_name = request.session.get('table_name')
-        db_path = request.session.get('db_path')
-        if not db_path:
-            return HttpResponse("Caminho do banco de dados não encontrado.", status=400)
-        
-        conn = sqlite3.connect(str(db_path))
-        cursor = conn.cursor()
-        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
-        conn.close()
+        if graphic:
+            request.session['graphic_base64'] = graphic
+    
+    if request.method == 'GET' and request.GET.get('download') == 'true':
+        graphic_base64 = request.session.get('graphic_base64')
+        if graphic_base64:
+            img_data = base64.b64decode(graphic_base64)
+            response = HttpResponse(img_data, content_type='image/png')
+            response['Content-Disposition'] = 'attachment; filename="graphic.png"'
+            return response
 
-        df = pd.DataFrame(data, columns=[
-            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
-            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
-            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
-            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
-            'IBM_average_history_Score', 'IBM_most_common_score', 'virustotal_asn', 'SHODAN_asn',
-            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
-        ])
-
-        allowed_columns = [
-            'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_total_reports',
-            'abuseipdb_num_distinct_users', 'virustotal_reputation', 'harmless', 'malicious', 'suspicious',
-            'undetected', 'IBM_score', 'IBM_average_history_Score', 'IBM_most_common_score',
-            'score_average_Mobat'
-        ]
-        graphic = plot_feature_importance(df, allowed_columns, model_type) # type: ignore
-        return render(request, 'importancias_ml.html', {'graphic': graphic})
-    return render(request, 'importancias_ml.html')
+    return render(request, 'selecao_caracteristicas.html', {'graphic': request.session.get('graphic_base64')})
 
 def plot_feature_importance(df: pd.DataFrame, allowed_columns: list, model_type: str) -> str:
     df_filtered = df[allowed_columns]
@@ -867,14 +887,69 @@ def plot_feature_importance(df: pd.DataFrame, allowed_columns: list, model_type:
     for feature, importance in zip([col for col in allowed_columns if col != 'score_average_Mobat'], ordered_feature_importances):
         plt.text(feature, importance + 0.005, f'{importance:.2f}', ha='center', va='bottom', rotation=45, fontsize=8)
     plt.tight_layout()
+    
     buffer = BytesIO()
-    plt.savefig(buffer, format='png', dpi=75)
+    plt.savefig(buffer, format='png')
     plt.close()
     buffer.seek(0)
     image_png = buffer.getvalue()
     buffer.close()
+    
     graphic = base64.b64encode(image_png).decode('utf-8')
     return graphic
+
+def importancias_ml(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        model_type = request.POST.get('model_type')
+        table_name = request.session.get('table_name')
+        db_path = request.session.get('db_path')
+        if not db_path:
+            return HttpResponse("Caminho do banco de dados não encontrado.", status=400)
+        
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+        conn.close()
+
+        df = pd.DataFrame(data, columns=[
+            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
+            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
+            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
+            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
+            'IBM_average_history_Score', 'IBM_most_common_score', 'virustotal_asn', 'SHODAN_asn',
+            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
+        ])
+
+        allowed_columns = [
+            'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_total_reports',
+            'abuseipdb_num_distinct_users', 'virustotal_reputation', 'harmless', 'malicious', 'suspicious',
+            'undetected', 'IBM_score', 'IBM_average_history_Score', 'IBM_most_common_score',
+            'score_average_Mobat'
+        ]
+
+        if action == 'Visualizar Gráfico de Importância':
+            graphic = plot_feature_importance(df, allowed_columns, model_type)
+            request.session['graphic'] = graphic  
+            context = {'graphic': graphic}
+            return render(request, 'importancias_ml.html', context)
+
+        elif action == 'Baixar Gráfico':
+            graphic = request.session.get('graphic')
+            if graphic:
+                with BytesIO(base64.b64decode(graphic)) as buffer:
+                    buffer.seek(0)
+                    temp_file_path = os.path.join(os.path.dirname(__file__), 'graphic.png')
+                    with open(temp_file_path, "wb") as f:
+                        f.write(buffer.read())
+                with open(temp_file_path, "rb") as f:
+                    response = HttpResponse(f.read(), content_type='image/png')
+                    response['Content-Disposition'] = 'attachment; filename="importancias_ml.png"'
+                os.remove(temp_file_path)
+                del request.session['graphic']
+                return response
+
+    return render(request, 'importancias_ml.html')
 
 def plot_top_ips_score_average(df, num_ips, top=0.92, bottom=0.3):
     top_ips = df['IP'].value_counts().nlargest(num_ips).index
@@ -924,6 +999,7 @@ def score_average_mobat(request):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
+        conn.close()
 
         df = pd.DataFrame(data, columns=[
             'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
@@ -934,10 +1010,21 @@ def score_average_mobat(request):
             'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
         ])
 
-        conn.close()
         graphic = plot_top_ips_score_average(df, num_ips, top=top, bottom=bottom)
-        return render(request, 'score_average_mobat.html', {'graphic': graphic})
-    return render(request, 'score_average_mobat.html')
+        request.session['graphic'] = graphic
+
+    elif request.method == 'GET' and 'download' in request.GET:
+        graphic = request.session.get('graphic')
+        if graphic:
+            with BytesIO(base64.b64decode(graphic)) as buffer:
+                buffer.seek(0)
+                response = HttpResponse(buffer.read(), content_type='image/png')
+                response['Content-Disposition'] = 'attachment; filename="score_average_mobat.png"'
+            del request.session['graphic']
+            return response
+        return HttpResponse("Gráfico não encontrado.", status=400)
+
+    return render(request, 'score_average_mobat.html', {'graphic': request.session.get('graphic')})
 
 def plot_country_score_average(df, country=None):
     country_names = {
@@ -1026,6 +1113,22 @@ def reputacao_pais(request):
         if isinstance(graphic, str) and graphic.startswith("Nenhum dado"):
             return HttpResponse(graphic)
         
+        request.session['graphic'] = graphic
+
+    elif request.method == 'GET' and 'download' in request.GET:
+        graphic = request.session.get('graphic')
+        if graphic:
+            with io.BytesIO(base64.b64decode(graphic)) as buffer:
+                buffer.seek(0)
+                temp_file_path = os.path.join(os.path.dirname(__file__), 'graphic.png')
+                with open(temp_file_path, "wb") as f:
+                    f.write(buffer.read())
+            with open(temp_file_path, "rb") as f:
+                response = HttpResponse(f.read(), content_type='image/png')
+                response['Content-Disposition'] = 'attachment; filename="graphic.png"'
+            os.remove(temp_file_path)
+            return response
+
     return render(request, 'reputacao_pais.html', {'graphic': graphic})
 
 def upload_tabela_ips(request):
@@ -1106,7 +1209,7 @@ def heatmap_ips(request):
             cursor = conn.cursor()
 
             data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
-            df = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
+            df = pd.DataFrame(data, columns=['IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code', 'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users', 'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry', 'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score', 'IBM_average_history_Score', 'IBM_most_common_score', 'virustotal_asn', 'SHODAN_asn', 'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'])
 
             df_selected = df.dropna(subset=["abuseipdb_country_code"])
             serie_country_counts = df_selected["abuseipdb_country_code"].value_counts()
@@ -1114,7 +1217,7 @@ def heatmap_ips(request):
             df_country_counts = serie_country_counts.rename_axis("country_code").reset_index(name="count")
             df_country_counts["country_code"] = df_country_counts["country_code"].apply(alpha2_to_alpha3)
             df_country_counts.dropna(subset=["country_code"], inplace=True)
-            countries = set(df_country_counts["country_code"])
+
             SHAPEFILE = "mobat_app/shapefiles/ne_10m_admin_0_countries.shp"
             geo_df = gpd.read_file(SHAPEFILE)[["ADMIN", "ADM0_A3", "geometry"]]
             geo_df.columns = ["country", "country_code", "geometry"]
@@ -1122,6 +1225,7 @@ def heatmap_ips(request):
             geo_df = geo_df.merge(df_country_counts, on="country_code", how="left")
             geo_df["count"] = geo_df["count"].fillna(0)
             geo_df["normalized_count"] = (geo_df["count"] - min_count) / (max_count - min_count)
+
             fig, ax = plt.subplots(figsize=(20, 10))
             geo_df.plot(
                 ax=ax,
@@ -1136,20 +1240,26 @@ def heatmap_ips(request):
             plt.axis("off")
             plt.subplots_adjust(top=0.9, bottom=0.08, left=0.03, right=0.95, hspace=0.2, wspace=0.2)
 
-            temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-            plt.savefig(temp_file.name)
-            plt.close()
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+                plt.savefig(temp_file.name)
+                temp_file_path = temp_file.name
 
-            image_path = temp_file.name
             conn.close()
 
-            with open(image_path, "rb") as f:
+            with open(temp_file_path, "rb") as f:
                 data_uri = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
 
-            os.remove(image_path)
-
-            context = {'image_path': data_uri}
+            context = {'image_path': data_uri, 'temp_file_path': temp_file_path}
             return render(request, 'heatmap_ips.html', context)
+
+        elif action == 'Baixar HeatMap':
+            temp_file_path = request.POST.get('temp_file_path', '')
+            if temp_file_path:
+                with open(temp_file_path, "rb") as f:
+                    response = HttpResponse(f.read(), content_type='image/png')
+                    response['Content-Disposition'] = 'attachment; filename="heatmap.png"'
+                os.remove(temp_file_path)
+                return response
 
     return render(request, 'heatmap_ips.html')
 
@@ -1194,10 +1304,27 @@ def tabela_acuracia(request):
             results_df = plot_show_results_table(df, allowed_columns)
             results_html = results_df.to_html(classes="table table-striped table-bordered", index=False)
             request.session['results_html'] = results_html
+            request.session['results_df'] = results_df.to_json() 
+            request.session['table_generated'] = True 
 
-            return render(request, 'tabela_acuracia.html', {'results_html': results_html})
+            return render(request, 'tabela_acuracia.html', {
+                'results_html': results_html,
+                'table_generated': True 
+            })
 
-    return render(request, 'tabela_acuracia.html', {'results_html': request.session.get('results_html')})
+        elif action == 'Baixar Tabela':
+            results_df_json = request.session.get('results_df')
+            if results_df_json:
+                results_df = pd.read_json(results_df_json)
+                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = 'attachment; filename="tabela_acuracia.xlsx"'
+                results_df.to_excel(response, index=False)
+                return response
+
+    return render(request, 'tabela_acuracia.html', {
+        'results_html': request.session.get('results_html'),
+        'table_generated': request.session.get('table_generated', False) 
+    })
 
 def categorize_non_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -1353,15 +1480,27 @@ def grafico_dispersao(request):
         plt.ylabel(y_axis)
         plt.grid(True)
         plt.subplots_adjust(top=0.92, bottom=0.08, left=0.1, right=0.95, hspace=0.2, wspace=0.2)
-        temp_file = os.path.join('/tmp', 'temp_plot.png')
-        plt.savefig(temp_file)
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+            plt.savefig(temp_file.name)
+            temp_file_path = temp_file.name
+
         plt.close()
 
-        with open(temp_file, "rb") as f:
+        with open(temp_file_path, "rb") as f:
             data_uri = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
 
-        os.remove(temp_file)
+        request.session['temp_file_path'] = temp_file_path
 
         return render(request, 'grafico_dispersao.html', {'plot': data_uri})
+
+    if 'download' in request.GET:
+        temp_file_path = request.session.get('temp_file_path', '')
+        if temp_file_path and os.path.exists(temp_file_path):
+            with open(temp_file_path, "rb") as f:
+                response = HttpResponse(f.read(), content_type='image/png')
+                response['Content-Disposition'] = 'attachment; filename="grafico_dispersao.png"'
+            os.remove(temp_file_path)
+            return response
 
     return render(request, 'grafico_dispersao.html')

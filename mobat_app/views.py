@@ -952,6 +952,9 @@ def importancias_ml(request):
     return render(request, 'importancias_ml.html')
 
 def plot_top_ips_score_average(df, num_ips, top=0.92, bottom=0.3):
+    df['score_average_Mobat'] = pd.to_numeric(df['score_average_Mobat'], errors='coerce')
+    df = df.dropna(subset=['score_average_Mobat'])
+
     top_ips = df['IP'].value_counts().nlargest(num_ips).index
     ip_variations = []
     for ip in top_ips:

@@ -1,55 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página Principal</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <style>
         body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f8f9fa;
             text-align: center;
+        }
+
+        h1, h2 {
+            margin: 10px 0;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #343a40;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #007bff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-name {
+            display: flex;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #007bff;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .letter {
+            transition: transform 0.3s;
         }
 
         .button {
             display: block;
-            margin: 10px auto;
-            padding: 10px 20px;
-            font-size: 16px;
-            text-align: center;
+            margin: 20px 0;
+            padding: 15px 30px;
+            font-size: 18px;
             text-decoration: none;
-            color: white;
+            color: #ffffff;
             background-color: #007bff;
-            border: 1px solid #007bff;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
-            width: 200px; 
+            transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 300px;
         }
 
         .button:hover {
             background-color: #0056b3;
-            border-color: #0056b3;
+            transform: translateY(-2px);
         }
 
-        h1 {
-            margin-top: 30px; 
-            font-size: 24px;
-        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 20px;
+            }
 
-        h2 {
-            margin-bottom: 50px; 
-            font-family: 'Arial Black', sans-serif; 
-            font-size: 36px; 
-            text-shadow: 2px 2px 4px #000000; 
-            color: #007bff; 
-            font-family: 'Graffiti', cursive;
-            font-size: 48px;
+            h2 {
+                font-size: 30px;
+            }
+
+            .project-name {
+                font-size: 36px;
+            }
+
+            .button {
+                font-size: 16px;
+                padding: 12px 25px;
+                width: 90%;
+                max-width: 250px;
+            }
         }
     </style>
 </head>
 <body>
-    <h2>MoBAt</h2>
+    <div class="project-name">
+        <span class="letter">M</span>
+        <span class="letter">o</span>
+        <span class="letter">B</span>
+        <span class="letter">A</span>
+        <span class="letter">t</span>
+    </div>
     <h1>Selecione o período que deseja visualizar:</h1>
     <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=1">Abril-Maio(2023)</a>
     <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=2">Setembro-Novembro(2023)</a>
     <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=3">Janeiro-Março(2024)</a>
     <a class="button" href="{% url 'visualizar_funcionalidades' %}?table_choice=4">Total-Coletado</a>
+
+    <script>
+        document.querySelector('.project-name').addEventListener('mouseover', () => {
+            document.querySelectorAll('.letter').forEach((letter, index) => {
+                setTimeout(() => {
+                    letter.style.transform = 'translateY(-10px)';
+                }, index * 100); 
+            });
+        });
+
+        document.querySelector('.project-name').addEventListener('mouseout', () => {
+            document.querySelectorAll('.letter').forEach((letter, index) => {
+                setTimeout(() => {
+                    letter.style.transform = 'translateY(0)';
+                }, index * 100); 
+            });
+        });
+    </script>
 </body>
 </html>

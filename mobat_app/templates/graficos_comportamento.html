@@ -71,7 +71,6 @@
             background-color: #0056b3;
         }
 
-        /* Estilo para ambos os botões */
         input[type="submit"],
         button {
             padding: 10px 20px;
@@ -114,12 +113,18 @@
             <br>
             <input type="submit" name="action" value="Gerar Gráfico">
             <button type="submit" name="action" value="Baixar Gráfico">Baixar Gráfico</button>
+            <input type="hidden" id="graphic_generated" name="graphic_generated" value="no">
         </form>
         {% if graphic %}
-            <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Comportamento">
+            <div class="graphic-container">
+                <img src="data:image/png;base64,{{ graphic }}" alt="Gráfico de Comportamento">
+            </div>
+            <script>
+                document.getElementById('graphic_generated').value = 'yes';
+            </script>
         {% endif %}
         <br>
-        <a href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
+        <a id="back_button" href="{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}" class="button-link">Voltar</a>
     </div>
 
     <script>
@@ -136,6 +141,17 @@
                 } else {
                     options[i].style.display = "none";
                 }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var graphicGenerated = document.getElementById('graphic_generated').value;
+            var backButton = document.getElementById('back_button');
+            
+            if (graphicGenerated === 'yes') {
+                backButton.href = window.location.href.split('?')[0];
+            } else {
+                backButton.href = "{% url 'visualizar_funcionalidades' %}?table_choice={{ request.session.table_choice }}";
             }
         });
     </script>

@@ -1043,6 +1043,10 @@ def plot_country_score_average(df, country=None):
         'CR': 'Costa Rica', 'CH': 'Suíça'
     }
 
+    global_avg_scores = df.groupby('abuseipdb_country_code')['score_average_Mobat'].mean().sort_values(ascending=False)
+    global_avg_scores.index = global_avg_scores.index.map(country_names)
+    mean_of_means = global_avg_scores.mean()
+
     if country:
         df = df[df['abuseipdb_country_code'] == country]
 
@@ -1051,12 +1055,11 @@ def plot_country_score_average(df, country=None):
 
     country_avg_scores = df.groupby('abuseipdb_country_code')['score_average_Mobat'].mean().sort_values(ascending=False)
     country_avg_scores.index = country_avg_scores.index.map(country_names)
-    mean_of_means = country_avg_scores.mean()
     country_avg_scores = country_avg_scores[~country_avg_scores.index.isna()]
     
     plt.figure(figsize=(16, 8))
     bars = plt.bar(country_avg_scores.index.astype(str), country_avg_scores.values, color='skyblue')
-    plt.axhline(mean_of_means, linestyle='--', color='red', label=f'Média das médias: {mean_of_means:.2f}')
+    plt.axhline(mean_of_means, linestyle='--', color='red', label=f'Média das médias global: {mean_of_means:.2f}')
     plt.title('Reputação por País')
     plt.xlabel('País')
     plt.ylabel('Média do Score Average Mobat')

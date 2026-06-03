@@ -1,0 +1,38 @@
+[project]
+name = "mobat_project"
+version = "1.0.0"
+description = "Ips data analysis tool applied in a web environment using the Django framework"
+requires-python = ">=3.12"
+dependencies = [
+    "asgiref==3.8.1",
+    "Django==4.2.14",
+    "djangorestframework==3.15.2",
+    "inflection==0.5.1",
+    "joblib==1.4.2",
+    "numpy==2.0.1",
+    "pandas==2.2.2",
+    "scikit-learn==1.5.1",
+    "scipy==1.13.1",
+    "seaborn==0.13.2",
+    "matplotlib==3.9.2",
+    "geopandas==1.0.1",
+    "pycountry==24.6.1",
+    "pytz==2024.1",
+    "xgboost==2.1.1",
+    "openpyxl==3.1.5",
+    "pyarrow==17.0.0",
+    "fastparquet==2024.5.0",
+    "setuptools",
+    "wheel",
+    "drf-yasg",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["mobat_app", "mobat_project"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = []

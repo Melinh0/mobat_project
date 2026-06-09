@@ -36,33 +36,34 @@ Acesse http://localhost:8000
 
 ## Exemplos de Gráficos Gerados
 
-- **Comportamento do Score Médio**: https://images/comportamento_score_average.png
-- **Clusters**: https://images/clusters.png
-- **Top IPs com maior variação**: https://images/score_average_top_ips.png
-- **Reputação por País**: https://images/reputacao_pais.png
-- **Heatmap de ocorrências**: https://images/heatmap.png
+### Comportamento do Score Médio
+
+![Comportamento do Score Médio](images/comportamento_score_average.png)
+
+### Clusters
+
+![Clusters](images/clusters.png)
+
+### Top IPs com maior variação
+
+![Top IPs com maior variação](images/score_average_top_ips.png)
+
+### Reputação por País
+
+![Reputação por País](images/reputacao_pais.png)
+
+### Heatmap de ocorrências
+
+![Heatmap de ocorrências](images/heatmap.png)
 
 ## Como usar
 
-1. Na página inicial, selecione o semestre desejado
-2. Explore as abas:
-   - **Gráficos de Comportamento**: escolha um IP e visualize evolução temporal dos scores
-   - **Clusters**: selecione uma feature e número de clusters
-   - **Score Average Mobat**: visualize os IPs mais frequentes
-   - **Reputação por País**: compare a média entre países
-   - **Heatmap**: gere mapa mundial com intensidade
-   - **Seleção de Características**: compare técnicas de redução
-   - **Importância de Features**: treine modelos
-   - **Tabela de Acurácia**: performance dos modelos
-   - **Download de Tabela**: exporte os dados brutos
+- Na página inicial, selecione o semestre desejado.
+- Explore as abas de Gráficos de Comportamento, Clusters, Score Average Mobat, Reputação por País, Heatmap, Seleção de Características, Importância de Features, Tabela de Acurácia e Download de Tabela.
 
 ## Estrutura do Projeto
 
-- `mobat_app/views/` – lógica por funcionalidade
-- `mobat_app/utils/` – helpers para plotagem e ML
-- `mobat_app/Seasons/` – bancos SQLite com dados semestrais
-- `mobat_app/shapefiles/` – arquivos GeoJSON para mapas
-
-## Contribuição
-
-Relate issues ou sugira melhorias através do repositório.
+- `mobat_app/views/` - lógica por funcionalidade
+- `mobat_app/utils/` - helpers para plotagem e ML
+- `mobat_app/Seasons/` - bancos SQLite com dados semestrais
+- `mobat_app/shapefiles/` - arquivos para mapas

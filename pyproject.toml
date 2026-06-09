@@ -22,13 +22,19 @@ dependencies = [
     "openpyxl==3.1.5",
     "pyarrow==17.0.0",
     "fastparquet==2024.5.0",
+    "requests",
     "setuptools",
     "wheel",
     "drf-yasg",
+    "psycopg2-binary>=2.9.12",
+    "psycopg>=3.3.4",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["mobat_app", "mobat_project"]
+
+[tool.uv]
+extra-build-dependencies = { pyarrow = ["setuptools"] }
 
 [build-system]
 requires = ["hatchling"]

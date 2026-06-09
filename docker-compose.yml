@@ -1,9 +1,36 @@
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mobat_db
+      POSTGRES_USER: mobat_user
+      POSTGRES_PASSWORD: mobat_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mobat_user -d mobat_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     environment:
       - DJANGO_SETTINGS_MODULE=mobat_project.settings
+      - DB_NAME=mobat_db
+      - DB_USER=mobat_user
+      - DB_PASSWORD=mobat_password
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./mobat_app/Seasons:/app/mobat_app/Seasons
+
+volumes:
+  postgres_data:

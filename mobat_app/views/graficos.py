@@ -1,15 +1,31 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-import sqlite3
 import pandas as pd
 import base64
+from mobat_app.models import IPData
 from mobat_app.utils.plot_helpers import (
     plot_ip_location, plot_ip_reports, plot_ip_score_average,
     plot_ip_last_report, plot_ip_time_period, plot_ibm_scores,
     plot_ip_virustotal_stats
 )
 
+def get_df_from_semester(semester):
+    qs = IPData.objects.filter(semester=semester).values()
+    df = pd.DataFrame.from_records(qs)
+    if df.empty:
+        return df
+    return df
+
+def get_available_ips(df):
+    if df.empty:
+        return []
+    return df['IP'].unique().tolist()
+
 def graficos_comportamento(request):
+    table_name = request.session.get('table_name')
+    if not table_name:
+        return redirect('index')
+
     if request.method == 'POST':
         ip_address = request.POST.get('ip_address')
         chart_type = request.POST.get('chart_type')
@@ -18,25 +34,10 @@ def graficos_comportamento(request):
         if not ip_address or not chart_type:
             return redirect('index')
 
-        table_name = request.session.get('table_name')
-        db_path = request.session.get('db_path')
-        if not table_name or not db_path:
-            return redirect('index')
+        df = get_df_from_semester(table_name)
+        if df.empty:
+            return HttpResponse("Nenhum dado encontrado para este semestre.", status=404)
 
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        columns = [
-            'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
-            'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
-            'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
-            'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
-            'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn',
-            'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
-        ]
-        data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
-        conn.close()
-
-        df = pd.DataFrame(data, columns=columns)
         mean_values = df.mean(numeric_only=True)
 
         graphic = None
@@ -61,29 +62,13 @@ def graficos_comportamento(request):
             response['Content-Disposition'] = 'attachment; filename="grafico.png"'
             return response
 
-        ips = df['IP'].unique().tolist()
+        ips = get_available_ips(df)
         return render(request, 'graficos_comportamento.html', {
             'graphic': graphic,
             'ip_list': ips,
             'ip_address': ip_address,
         })
 
-    table_name = request.session.get('table_name')
-    if not table_name:
-        return redirect('index')
-    db_path = request.session.get('db_path')
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    columns = [
-        'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
-        'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
-        'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
-        'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
-        'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn',
-        'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
-    ]
-    data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
-    conn.close()
-    df = pd.DataFrame(data, columns=columns)
-    ips = df['IP'].unique().tolist()
+    df = get_df_from_semester(table_name)
+    ips = get_available_ips(df)
     return render(request, 'graficos_comportamento.html', {'ip_list': ips, 'ip_address': ''})

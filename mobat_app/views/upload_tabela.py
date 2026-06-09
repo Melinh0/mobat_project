@@ -1,21 +1,19 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-import sqlite3
 import pandas as pd
-from django.conf import settings
+from mobat_app.models import IPData
 
 def upload_tabela_ips(request):
     if request.method == 'POST':
         file_type = request.POST.get('file_type')
-        table_name = request.session.get('table_name')
-        db_path = settings.BASE_DIR / request.session.get('db_path')
+        semester = request.session.get('table_name')
 
-        if not table_name or not db_path.exists():
-            return HttpResponse("Tabela não encontrada", status=400)
+        if not semester:
+            return HttpResponse("Semestre não selecionado", status=400)
 
-        conn = sqlite3.connect(db_path)
-        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
-        conn.close()
+        qs = IPData.objects.filter(semester=semester).values()
+        df = pd.DataFrame.from_records(qs)
+
         return download_all_ip_data(df, file_type)
 
     return render(request, 'upload_tabela_ips.html')

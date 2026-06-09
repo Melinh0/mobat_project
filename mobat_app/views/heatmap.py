@@ -1,36 +1,25 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-import sqlite3
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import tempfile
 import base64
 import os
+from mobat_app.models import IPData
 from mobat_app.utils.data_helpers import alpha2_to_alpha3
 
 def heatmap_ips(request):
+    table_name = request.session.get('table_name')
+    if not table_name:
+        return redirect('index')
+
     if request.method == 'POST':
         action = request.POST.get('action')
-        if action == 'Gerar HeatMap':
-            table_name = request.session.get('table_name')
-            db_path = request.session.get('db_path')
-            if not table_name or not db_path:
-                return redirect('index')
 
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            columns = [
-                'IP', 'abuseipdb_is_whitelisted', 'abuseipdb_confidence_score', 'abuseipdb_country_code',
-                'abuseipdb_isp', 'abuseipdb_domain', 'abuseipdb_total_reports', 'abuseipdb_num_distinct_users',
-                'abuseipdb_last_reported_at', 'virustotal_reputation', 'virustotal_regional_internet_registry',
-                'virustotal_as_owner', 'harmless', 'malicious', 'suspicious', 'undetected', 'IBM_score',
-                'IBM_average history Score', 'IBM_most common score', 'virustotal_asn', 'SHODAN_asn',
-                'SHODAN_isp', 'ALIENVAULT_reputation', 'ALIENVAULT_asn', 'score_average_Mobat'
-            ]
-            data = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
-            conn.close()
-            df = pd.DataFrame(data, columns=columns)
+        if action == 'Gerar HeatMap':
+            qs = IPData.objects.filter(semester=table_name).values()
+            df = pd.DataFrame.from_records(qs)
 
             df_selected = df.dropna(subset=["abuseipdb_country_code"])
             serie_country_counts = df_selected["abuseipdb_country_code"].value_counts()

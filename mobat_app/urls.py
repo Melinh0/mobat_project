@@ -14,6 +14,7 @@ from mobat_app.views import (
     tabela_acuracia,
     grafico_dispersao,
 )
+from mobat_app.views.chatbot import chatbot_ask, chatbot_status
 
 urlpatterns = [
     path('', index, name='index'),
@@ -29,4 +30,6 @@ urlpatterns = [
     path('heatmap_ips/', heatmap_ips, name='heatmap_ips'),
     path('tabela_acuracia/', tabela_acuracia, name='tabela_acuracia_modelos'),
     path('grafico_dispersao/', grafico_dispersao, name='grafico_dispersao'),
+    path('chatbot/status/', chatbot_status, name='chatbot_status'),
+    path('chatbot/ask/', chatbot_ask, name='chatbot_ask'),
 ]

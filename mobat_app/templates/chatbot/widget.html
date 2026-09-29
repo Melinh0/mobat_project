@@ -1,0 +1,469 @@
+<style id="mobat-chatbot-styles">
+    #mobat-chatbot-root, #mobat-chatbot-root * { box-sizing: border-box; }
+    #mobat-chatbot-root {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 2147483000;
+        font-family: 'Roboto', Arial, sans-serif;
+        font-size: 14px;
+        color: #343a40;
+        text-align: left;
+    }
+    #mobat-chatbot-root .mc-fab {
+        width: 56px;
+        height: 56px;
+        border: none;
+        border-radius: 50%;
+        background: #007bff;
+        color: #fff;
+        font-size: 24px;
+        line-height: 56px;
+        cursor: pointer;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
+        transition: transform .2s, background-color .2s;
+        padding: 0;
+    }
+    #mobat-chatbot-root .mc-fab:hover { background: #0056b3; transform: translateY(-2px); }
+    #mobat-chatbot-root .mc-panel {
+        display: none;
+        position: fixed;
+        right: 20px;
+        bottom: 88px;
+        width: 380px;
+        max-width: calc(100vw - 32px);
+        height: 520px;
+        max-height: calc(100vh - 120px);
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+        overflow: hidden;
+        flex-direction: column;
+    }
+    #mobat-chatbot-root[data-open="true"] .mc-panel { display: flex; }
+    #mobat-chatbot-root .mc-header {
+        background: #007bff;
+        color: #fff;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    #mobat-chatbot-root .mc-title { font-weight: 700; font-size: 15px; }
+    #mobat-chatbot-root .mc-subtitle { display: block; font-size: 11px; opacity: .9; }
+    #mobat-chatbot-root .mc-close {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 6px;
+    }
+    #mobat-chatbot-root .mc-close:hover { opacity: .8; }
+    #mobat-chatbot-root .mc-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    #mobat-chatbot-root .mc-msg {
+        max-width: 92%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        line-height: 1.45;
+        white-space: normal;
+        word-break: break-word;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+    }
+    #mobat-chatbot-root .mc-msg--user {
+        align-self: flex-end;
+        background: #007bff;
+        color: #fff;
+        border-bottom-right-radius: 3px;
+    }
+    #mobat-chatbot-root .mc-msg--bot {
+        align-self: flex-start;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-bottom-left-radius: 3px;
+    }
+    #mobat-chatbot-root .mc-msg--error {
+        align-self: flex-start;
+        background: #fff3f4;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    #mobat-chatbot-root .mc-msg--loading { color: #6c757d; font-style: italic; }
+    #mobat-chatbot-root .mc-msg pre {
+        background: #f1f3f5;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 6px 8px;
+        margin: 6px 0;
+        font-size: 12px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+    }
+    #mobat-chatbot-root .mc-msg code {
+        background: #eef1f4;
+        border-radius: 4px;
+        padding: 1px 4px;
+        font-size: 12.5px;
+    }
+    #mobat-chatbot-root .mc-msg ul { margin: 6px 0; padding-left: 18px; }
+    #mobat-chatbot-root .mc-meta {
+        margin-top: 8px;
+        font-size: 11px;
+        color: #6c757d;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
+    #mobat-chatbot-root .mc-chip {
+        background: #e9ecef;
+        border-radius: 10px;
+        padding: 2px 7px;
+        color: #495057;
+    }
+    #mobat-chatbot-root .mc-details {
+        margin-top: 6px;
+        font-size: 11.5px;
+        color: #495057;
+    }
+    #mobat-chatbot-root .mc-details > summary { cursor: pointer; color: #007bff; }
+    #mobat-chatbot-root .mc-details ul { margin: 6px 0 0; padding-left: 16px; }
+    #mobat-chatbot-root .mc-status {
+        font-size: 11px;
+        color: #6c757d;
+        padding: 5px 12px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    #mobat-chatbot-root .mc-form {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border-top: 1px solid #e9ecef;
+        background: #fff;
+        align-items: flex-end;
+    }
+    #mobat-chatbot-root .mc-form textarea {
+        flex: 1;
+        resize: none;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 7px 8px;
+        font-family: inherit;
+        font-size: 13.5px;
+        max-height: 90px;
+        outline: none;
+    }
+    #mobat-chatbot-root .mc-form textarea:focus { border-color: #007bff; }
+    #mobat-chatbot-root .mc-send {
+        background: #007bff;
+        border: none;
+        color: #fff;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13.5px;
+    }
+    #mobat-chatbot-root .mc-send:hover { background: #0056b3; }
+    #mobat-chatbot-root .mc-send[disabled] { background: #adb5bd; cursor: not-allowed; }
+    #mobat-chatbot-root .mc-hint {
+        font-size: 10.5px;
+        color: #adb5bd;
+        padding: 0 12px 6px;
+        background: #fff;
+    }
+    @media (max-width: 560px) {
+        #mobat-chatbot-root { right: 12px; bottom: 12px; }
+        #mobat-chatbot-root .mc-panel {
+            right: 12px;
+            bottom: 76px;
+            width: calc(100vw - 24px);
+            height: calc(100vh - 110px);
+        }
+    }
+</style>
+
+<div id="mobat-chatbot-root" class="mobat-chatbot" data-open="false">
+    <section class="mc-panel" role="dialog" aria-label="Assistente de dados MoBat">
+        <header class="mc-header">
+            <div>
+                <span class="mc-title">Assistente de dados</span>
+                <span class="mc-subtitle" id="mc-subtitle">{{ config.datasetLabel }} · {{ config.model }}</span>
+            </div>
+            <button type="button" class="mc-close" id="mc-close" aria-label="Fechar">&times;</button>
+        </header>
+
+        <div class="mc-messages" id="mc-messages">
+            <div class="mc-msg mc-msg--bot">
+                Olá! Pergunte sobre os dados de <strong>{{ config.datasetLabel }}</strong>:
+                contagens, rankings, médias, comparações entre períodos ou conclusões
+                sobre a reputação dos IPs.
+            </div>
+        </div>
+
+        <div class="mc-status" id="mc-status">Índice de dados: preparando…</div>
+        <div class="mc-hint">Respostas usam RAG + cálculos pandas sobre a base; confira as fontes em cada mensagem.</div>
+
+        <form class="mc-form" id="mc-form" autocomplete="off">
+            <textarea id="mc-input" rows="2"
+                      placeholder="Ex.: quantos IPs da Rússia têm score médio acima de 1?"
+                      aria-label="Sua pergunta"></textarea>
+            <button type="submit" class="mc-send" id="mc-send">Enviar</button>
+        </form>
+    </section>
+
+    <button type="button" class="mc-fab" id="mc-toggle" aria-label="Abrir assistente de dados" title="Assistente de dados">💬</button>
+</div>
+
+{{ config|json_script:"mobat-chatbot-config" }}
+
+<script>
+(function () {
+    'use strict';
+
+    var root = document.getElementById('mobat-chatbot-root');
+    if (!root || root.getAttribute('data-ready') === '1') { return; }
+    root.setAttribute('data-ready', '1');
+
+    var configEl = document.getElementById('mobat-chatbot-config');
+    var cfg = JSON.parse(configEl ? configEl.textContent : '{}');
+
+    var messagesEl = document.getElementById('mc-messages');
+    var formEl = document.getElementById('mc-form');
+    var inputEl = document.getElementById('mc-input');
+    var sendEl = document.getElementById('mc-send');
+    var statusEl = document.getElementById('mc-status');
+    var history = [];
+    var busy = false;
+    var statusLoaded = false;
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatText(text) {
+        var html = escapeHtml(text);
+        html = html.replace(/```([\s\S]*?)```/g, function (_, block) {
+            return '<pre>' + block.replace(/^\n+|\n+$/g, '') + '</pre>';
+        });
+        html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+        html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/(?:^|\n)((?:[-*] [^\n]*\n?)+)/g, function (_, block) {
+            var items = block.trim().split('\n').map(function (line) {
+                return '<li>' + line.replace(/^[-*] /, '') + '</li>';
+            }).join('');
+            return '\n<ul>' + items + '</ul>';
+        });
+        html = html.replace(/\n/g, '<br>');
+        html = html.replace(/<br>\s*<ul>/g, '<ul>').replace(/<\/ul>\s*<br>/g, '</ul>');
+        return html;
+    }
+
+    function scrollDown() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function addMessage(role, text, options) {
+        options = options || {};
+        var el = document.createElement('div');
+        var cls = 'mc-msg mc-msg--' + (role === 'user' ? 'user' : role === 'error' ? 'error' : 'bot');
+        if (options.loading) { cls += ' mc-msg--loading'; }
+        el.className = cls;
+        el.innerHTML = options.loading ? escapeHtml(text) : formatText(text);
+        messagesEl.appendChild(el);
+        scrollDown();
+        return el;
+    }
+
+    function addMeta(el, data) {
+        var meta = document.createElement('div');
+        meta.className = 'mc-meta';
+        meta.appendChild(document.createTextNode(
+            (data.elapsed ? data.elapsed.toFixed(1) + 's' : '') +
+            (data.model ? ' · ' + data.model : '') +
+            (data.dataset ? ' · ' + data.dataset : '')
+        ));
+
+        var sources = data.sources || [];
+        if (sources.length) {
+            var details = document.createElement('details');
+            details.className = 'mc-details';
+            var summary = document.createElement('summary');
+            summary.textContent = 'Fontes recuperadas (' + sources.length + ')';
+            details.appendChild(summary);
+            var list = document.createElement('ul');
+            sources.forEach(function (source) {
+                var item = document.createElement('li');
+                item.textContent = source.kind_label + ' — ' + source.title +
+                    (typeof source.score === 'number' ? ' (similaridade ' + source.score.toFixed(2) + ')' : '');
+                list.appendChild(item);
+            });
+            details.appendChild(list);
+            el.appendChild(details);
+        }
+
+        var analysis = data.analysis;
+        if (analysis && analysis.attempted) {
+            var detailsA = document.createElement('details');
+            detailsA.className = 'mc-details';
+            var summaryA = document.createElement('summary');
+            summaryA.textContent = analysis.ok
+                ? 'Cálculo pandas executado na base'
+                : 'Cálculo pandas indisponível';
+            detailsA.appendChild(summaryA);
+
+            if (analysis.reason) {
+                var reason = document.createElement('div');
+                reason.textContent = analysis.reason;
+                detailsA.appendChild(reason);
+            }
+            if (analysis.code) {
+                detailsA.appendChild(document.createElement('pre')).textContent = analysis.code;
+            }
+            if (analysis.output) {
+                var outLabel = document.createElement('div');
+                outLabel.textContent = 'Resultado:';
+                detailsA.appendChild(outLabel);
+                detailsA.appendChild(document.createElement('pre')).textContent = analysis.output;
+            }
+            if (analysis.error) {
+                var err = document.createElement('div');
+                err.textContent = 'Erro: ' + analysis.error;
+                detailsA.appendChild(err);
+            }
+            el.appendChild(detailsA);
+        }
+
+        el.appendChild(meta);
+        scrollDown();
+    }
+
+    function loadStatus() {
+        if (statusLoaded || !cfg.statusUrl) { return; }
+        statusLoaded = true;
+        fetch(cfg.statusUrl, { credentials: 'same-origin' })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (!data.enabled) {
+                    statusEl.textContent = 'Assistente desativado.';
+                    return;
+                }
+                statusEl.textContent = data.index_ready
+                    ? 'Índice de dados: ' + data.index_size + ' trechos prontos · limiar ' + data.threshold +
+                      (data.analysis_enabled ? ' · cálculos pandas ativos' : '')
+                    : 'Índice de dados: construindo… (a primeira pergunta pode demorar)';
+            })
+            .catch(function () {
+                statusEl.textContent = 'Não foi possível consultar o status do assistente.';
+            });
+    }
+
+    function setOpen(open) {
+        root.setAttribute('data-open', open ? 'true' : 'false');
+        if (open) {
+            loadStatus();
+            inputEl.focus();
+        }
+    }
+
+    document.getElementById('mc-toggle').addEventListener('click', function () {
+        setOpen(root.getAttribute('data-open') !== 'true');
+    });
+    document.getElementById('mc-close').addEventListener('click', function () {
+        setOpen(false);
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && root.getAttribute('data-open') === 'true') { setOpen(false); }
+    });
+
+    inputEl.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
+
+    formEl.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (busy) { return; }
+
+        var question = inputEl.value.trim();
+        if (!question) { return; }
+        if (cfg.maxQuestionLength && question.length > cfg.maxQuestionLength) {
+            addMessage('error', 'Pergunta longa demais (máximo ' + cfg.maxQuestionLength + ' caracteres).');
+            return;
+        }
+
+        inputEl.value = '';
+        busy = true;
+        sendEl.disabled = true;
+        addMessage('user', question);
+        var loading = addMessage('bot', 'Consultando a base e o modelo…', { loading: true });
+
+        history.push({ role: 'user', content: question });
+
+        fetch(cfg.askUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cfg.csrfToken || ''
+            },
+            body: JSON.stringify({
+                question: question,
+                dataset_key: cfg.datasetKey,
+                history: history.slice(-(cfg.historyLimit || 8))
+            })
+        })
+            .then(function (response) {
+                return response.json().catch(function () { return {}; }).then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                loading.remove();
+                if (!result.ok) {
+                    addMessage('error', result.data.error || 'Erro ao consultar o assistente.');
+                    return;
+                }
+                var answer = result.data.answer || '(resposta vazia)';
+                var el = addMessage('bot', answer);
+                addMeta(el, {
+                    elapsed: result.data.elapsed,
+                    model: result.data.model,
+                    dataset: result.data.dataset,
+                    sources: result.data.sources,
+                    analysis: result.data.analysis
+                });
+                history.push({ role: 'assistant', content: answer });
+                var limit = (cfg.historyLimit || 8) * 2;
+                if (history.length > limit) { history = history.slice(-limit); }
+            })
+            .catch(function () {
+                loading.remove();
+                addMessage('error', 'Falha de conexão com o servidor. Tente novamente.');
+            })
+            .finally(function () {
+                busy = false;
+                sendEl.disabled = false;
+                inputEl.focus();
+            });
+    });
+})();
+</script>

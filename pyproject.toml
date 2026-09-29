@@ -25,6 +25,7 @@ dependencies = [
     "setuptools",
     "wheel",
     "drf-yasg",
+    "requests>=2.34.2",
 ]
 
 [tool.hatch.build.targets.wheel]

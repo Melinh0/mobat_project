@@ -656,7 +656,7 @@ def clusters(request: HttpRequest) -> HttpResponse:
 
         num_clusters = int(num_clusters_str) if num_clusters_str else 1
 
-        request.session['num_clusters'] = num_clusters  # Store the number of clusters in session
+        request.session['num_clusters'] = num_clusters
 
         table_name = request.session.get('table_name')
         db_path = request.session.get('db_path')

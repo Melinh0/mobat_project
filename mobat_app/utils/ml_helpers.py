@@ -13,11 +13,16 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
+from mobat_app.rag.numeric import looks_numeric, to_numeric_clean
 
 def categorize_non_numeric_columns(df):
     df = df.copy()
     for col in df.select_dtypes(include=['object', 'category']).columns:
-        if col != 'IP':
+        if col == 'IP':
+            continue
+        if looks_numeric(df[col]):
+            df[col] = to_numeric_clean(df[col])
+        else:
             df[col] = df[col].astype('category').cat.codes
     return df
 
@@ -109,8 +114,9 @@ def plot_feature_importance(df, allowed_columns, model_type):
         'ElasticNet': ElasticNet()
     }
     model = models.get(model_type)
-    if not model:
+    if model is None:
         raise ValueError("Model type not supported.")
+    df_filtered = handle_missing_values(df_filtered)
     model.fit(df_filtered.drop('score_average_Mobat', axis=1), df_filtered['score_average_Mobat'])
     if hasattr(model, 'feature_importances_'):
         importances = model.feature_importances_
@@ -118,6 +124,7 @@ def plot_feature_importance(df, allowed_columns, model_type):
         importances = np.abs(model.coef_)
     else:
         raise ValueError("Model does not have 'feature_importances_' or 'coef_'.")
+    importances = np.nan_to_num(np.asarray(importances, dtype=float), nan=0.0, posinf=0.0, neginf=0.0)
     ordered_importances = [importances[i] for i, col in enumerate(allowed_columns) if col != 'score_average_Mobat']
     feature_names = [col for col in allowed_columns if col != 'score_average_Mobat']
     plt.figure(figsize=(16, 8))
